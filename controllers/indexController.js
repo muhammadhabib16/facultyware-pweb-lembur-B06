@@ -20,7 +20,7 @@ const login = async (req, res, next) => {
   const { username, password } = req.body;
 
   try {
-    const [rows] = await db.query("SELECT * FROM users WHERE username = ?", [
+    const [rows] = await db.query("SELECT * FROM users WHERE email = ?", [
       username,
     ]);
 
@@ -65,5 +65,5 @@ module.exports = {
   home,
   loginPage,
   login,
-  logout
+  logout,
 };
