@@ -1,1 +1,34 @@
-test
+FACULTYWARE
+├── controllers/
+│   ├── indexController.js       # Mengatur autentikasi global (Login, Logout)
+│   ├── usersController.js       # Mengatur profil / manajemen user umum
+│   ├── pegawaiController.js     # BARU (Alya & Akbar): Fitur No. 1 - 8
+│   ├── pimpinanController.js    # BARU (Habib / Bos): Fitur No. 9 - 12
+│   ├── laporanController.js     # BARU (Hasyfi): Fitur No. 13 - 16
+│   └── adminController.js       # BARU (Darrel): Fitur No. 17 - 20
+├── routes/
+│   ├── index.js                 # Menampung rute landing page / login
+│   ├── users.js                 # Menampung rute manajemen user
+│   ├── pegawai.js               # BARU: Endpoint Modul Pegawai
+│   ├── pimpinan.js              # BARU: Endpoint Modul Pimpinan
+│   └── admin.js                 # BARU: Endpoint Modul Admin Kepegawaian
+└── views/
+    ├── auth/                    # Halaman login, dsb.
+    ├── pegawai/                 # BARU: Folder view untuk Alya & Akbar
+    │   ├── permohonan.ejs       # Halaman form pengajuan lembur (Fitur 1)
+    │   ├── riwayat.ejs          # Halaman tabel riwayat & list penugasan (Fitur 4, 5)
+    │   └── detail_tugas.ejs     # Halaman rincian penugasan (Fitur 6)
+    ├── pimpinan/                # BARU: Folder view untuk Bos & Hasyfi
+    │   ├── buat_penugasan.ejs   # Halaman form input penugasan (Fitur 9 - Habib)
+    │   ├── list_penugasan.ejs   # Halaman kelola penugasan CRUD (Fitur 10,11,12 - Habib)
+    │   ├── list_laporan.ejs     # Halaman list laporan masuk (Fitur 13 - Hasyfi)
+    │   └── detail_laporan.ejs   # Halaman verifikasi & catatan revisi (Fitur 14,15,16 - Hasyfi)
+    ├── admin/                   # BARU: Folder view untuk Darrel
+    │   ├── dashboard.ejs        # Halaman utama admin kepegawaian
+    │   └── rekap_laporan.ejs    # Halaman unduh .xlsx & filter tanggal/divisi (Fitur 18,19,20)
+    ├── error.ejs
+    ├── home.ejs
+    ├── index.ejs
+    └── login.ejs
+
+    
