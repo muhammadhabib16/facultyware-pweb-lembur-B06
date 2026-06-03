@@ -1,4 +1,4 @@
-const db = require('../lib/db');
+const db = require("../lib/db");
 
 // ─────────────────────────────────────────────────────────────────────────────
 // FITUR 13: Pimpinan dapat melihat list laporan lembur
@@ -14,7 +14,7 @@ exports.listLaporan = async (req, res) => {
     let whereClause = `WHERE or2.status IN ('completed', 'approved', 'rejected')`;
     const params = [];
 
-    if (status && ['completed', 'approved', 'rejected'].includes(status)) {
+    if (status && ["completed", "approved", "rejected"].includes(status)) {
       whereClause += ` AND or2.status = ?`;
       params.push(status);
     }
@@ -62,8 +62,8 @@ exports.listLaporan = async (req, res) => {
 
     const totalPages = Math.ceil(total / limit);
 
-    res.render('pimpinan/list_laporan', {
-      title: 'List Laporan Lembur',
+    res.render("pimpinan/laporan", {
+      title: "List Laporan Lembur",
       laporan: rows,
       pagination: {
         currentPage: parseInt(page),
@@ -74,8 +74,10 @@ exports.listLaporan = async (req, res) => {
       filters: { status, search },
     });
   } catch (err) {
-    console.error('listLaporan error:', err);
-    res.status(500).render('error', { message: 'Gagal memuat daftar laporan lembur.' });
+    console.error("listLaporan error:", err);
+    res
+      .status(500)
+      .render("error", { message: "Gagal memuat daftar laporan lembur." });
   }
 };
 
@@ -101,11 +103,13 @@ exports.detailLaporan = async (req, res) => {
        LEFT JOIN employees approver ON approver.id = or2.approved_by
        WHERE or2.id = ?
          AND or2.status IN ('completed', 'approved', 'rejected')`,
-      [id]
+      [id],
     );
 
     if (!laporan) {
-      return res.status(404).render('error', { message: 'Laporan tidak ditemukan.' });
+      return res
+        .status(404)
+        .render("error", { message: "Laporan tidak ditemukan." });
     }
 
     // Daftar anggota lembur beserta data aktual
@@ -120,7 +124,7 @@ exports.detailLaporan = async (req, res) => {
        LEFT JOIN organization_units ou ON ou.id = e.organization_unit_id
        WHERE orm.overtime_request_id = ?
        ORDER BY e.name ASC`,
-      [id]
+      [id],
     );
 
     // Riwayat approval log
@@ -132,18 +136,20 @@ exports.detailLaporan = async (req, res) => {
        JOIN employees e ON e.id = oal.approver_id
        WHERE oal.overtime_request_id = ?
        ORDER BY oal.action_date DESC`,
-      [id]
+      [id],
     );
 
-    res.render('pimpinan/detail_laporan', {
+    res.render("pimpinan/detail_laporan", {
       title: `Detail Laporan Lembur — ${laporan.request_number}`,
       laporan,
       anggota,
       approvalLogs,
     });
   } catch (err) {
-    console.error('detailLaporan error:', err);
-    res.status(500).render('error', { message: 'Gagal memuat detail laporan lembur.' });
+    console.error("detailLaporan error:", err);
+    res
+      .status(500)
+      .render("error", { message: "Gagal memuat detail laporan lembur." });
   }
 };
 
@@ -163,7 +169,7 @@ exports.konfirmasiLaporan = async (req, res) => {
     // Validasi: laporan harus dalam status 'completed' agar bisa dikonfirmasi
     const [[laporan]] = await connection.query(
       `SELECT id, status FROM overtime_requests WHERE id = ? AND status = 'completed'`,
-      [id]
+      [id],
     );
 
     if (!laporan) {
@@ -179,7 +185,7 @@ exports.konfirmasiLaporan = async (req, res) => {
       `UPDATE overtime_requests
        SET status = 'approved', approved_by = ?, approved_at = NOW(), updated_at = NOW()
        WHERE id = ?`,
-      [approverId, id]
+      [approverId, id],
     );
 
     // Catat ke overtime_approval_logs
@@ -187,21 +193,23 @@ exports.konfirmasiLaporan = async (req, res) => {
       `INSERT INTO overtime_approval_logs
          (overtime_request_id, approver_id, employee_id, status, notes, action_date, created_at, updated_at)
        VALUES (?, ?, ?, 'approved', NULL, NOW(), NOW(), NOW())`,
-      [id, approverId, approverId]
+      [id, approverId, approverId],
     );
 
     await connection.commit();
 
     // Kalau request HTMX, redirect dengan HX-Redirect header
-    if (req.headers['hx-request']) {
-      res.set('HX-Redirect', `/pimpinan/laporan/${id}`);
+    if (req.headers["hx-request"]) {
+      res.set("HX-Redirect", `/pimpinan/laporan/${id}`);
       return res.sendStatus(204);
     }
     res.redirect(`/pimpinan/laporan/${id}?toast=konfirmasi_berhasil`);
   } catch (err) {
     await connection.rollback();
-    console.error('konfirmasiLaporan error:', err);
-    res.status(500).json({ success: false, message: 'Gagal mengkonfirmasi laporan.' });
+    console.error("konfirmasiLaporan error:", err);
+    res
+      .status(500)
+      .json({ success: false, message: "Gagal mengkonfirmasi laporan." });
   } finally {
     connection.release();
   }
@@ -218,10 +226,10 @@ exports.tolakLaporan = async (req, res) => {
     const { catatan_revisi } = req.body;
     const approverId = req.user.employee_id;
 
-    if (!catatan_revisi || catatan_revisi.trim() === '') {
+    if (!catatan_revisi || catatan_revisi.trim() === "") {
       return res.status(400).json({
         success: false,
-        message: 'Catatan revisi wajib diisi saat menolak laporan.',
+        message: "Catatan revisi wajib diisi saat menolak laporan.",
       });
     }
 
@@ -230,7 +238,7 @@ exports.tolakLaporan = async (req, res) => {
     // Validasi status
     const [[laporan]] = await connection.query(
       `SELECT id, status FROM overtime_requests WHERE id = ? AND status = 'completed'`,
-      [id]
+      [id],
     );
 
     if (!laporan) {
@@ -246,7 +254,7 @@ exports.tolakLaporan = async (req, res) => {
       `UPDATE overtime_requests
        SET status = 'rejected', approved_by = ?, approved_at = NOW(), updated_at = NOW()
        WHERE id = ?`,
-      [approverId, id]
+      [approverId, id],
     );
 
     // Catat ke overtime_approval_logs dengan catatan revisi
@@ -254,20 +262,20 @@ exports.tolakLaporan = async (req, res) => {
       `INSERT INTO overtime_approval_logs
          (overtime_request_id, approver_id, employee_id, status, notes, action_date, created_at, updated_at)
        VALUES (?, ?, ?, 'rejected', ?, NOW(), NOW(), NOW())`,
-      [id, approverId, approverId, catatan_revisi.trim()]
+      [id, approverId, approverId, catatan_revisi.trim()],
     );
 
     await connection.commit();
 
-    if (req.headers['hx-request']) {
-      res.set('HX-Redirect', `/pimpinan/laporan/${id}`);
+    if (req.headers["hx-request"]) {
+      res.set("HX-Redirect", `/pimpinan/laporan/${id}`);
       return res.sendStatus(204);
     }
     res.redirect(`/pimpinan/laporan/${id}?toast=tolak_berhasil`);
   } catch (err) {
     await connection.rollback();
-    console.error('tolakLaporan error:', err);
-    res.status(500).json({ success: false, message: 'Gagal menolak laporan.' });
+    console.error("tolakLaporan error:", err);
+    res.status(500).json({ success: false, message: "Gagal menolak laporan." });
   } finally {
     connection.release();
   }
