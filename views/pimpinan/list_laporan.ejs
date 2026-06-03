@@ -1,0 +1,116 @@
+<%- include('../layouts/header') %>
+
+<div class="container mx-auto px-4 py-8" hx-boost="true">
+  <div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold tracking-tight"><%= title %></h1>
+      <p class="text-sm text-muted-foreground">Kelola dan tinjau seluruh pelaksanaan laporan lembur pegawai.</p>
+    </div>
+  </div>
+
+  <div class="card p-4 mb-6 bg-background border rounded-lg shadow-sm">
+    <form method="GET" action="/pimpinan/laporan" class="flex flex-col md:flex-row gap-4 items-end" hx-push-url="true">
+      <div class="flex-1 w-full">
+        <label class="text-xs font-semibold mb-1 block">Cari Laporan</label>
+        <input 
+          type="text" 
+          name="search" 
+          placeholder="No. Permohonan, judul, atau nama pegawai..." 
+          value="<%= filters.search || '' %>"
+          class="input w-full"
+        />
+      </div>
+      
+      <div class="w-full md:w-48">
+        <label class="text-xs font-semibold mb-1 block">Status Laporan</label>
+        <select name="status" class="select w-full">
+          <option value="">Semua Status</option>
+          <option value="completed" <%= filters.status === 'completed' ? 'selected' : '' %>>Completed (Butuh Review)</option>
+          <option value="approved" <%= filters.status === 'approved' ? 'selected' : '' %>>Approved (Disetujui)</option>
+          <option value="rejected" <%= filters.status === 'rejected' ? 'selected' : '' %>>Rejected (Ditolak)</option>
+        </select>
+      </div>
+
+      <div class="flex gap-2 w-full md:w-auto">
+        <button type="submit" class="btn btn-primary w-full md:w-auto">Filter</button>
+        <a href="/pimpinan/laporan" class="btn btn-outline w-full md:w-auto">Reset</a>
+      </div>
+    </form>
+  </div>
+
+  <div class="card overflow-hidden border rounded-lg shadow-sm bg-background">
+    <div class="overflow-x-auto">
+      <table class="table w-full text-left border-collapse">
+        <thead>
+          <tr class="border-b bg-muted/50 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            <th class="p-4">No. Permohonan</th>
+            <th class="p-4">Judul Agenda</th>
+            <th class="p-4">Diajukan Oleh</th>
+            <th class="p-4">Tgl Pengajuan</th>
+            <th class="p-4 text-center">Jumlah Anggota</th>
+            <th class="p-4 text-center">Status</th>
+            <th class="p-4 text-right">Aksi</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y text-sm">
+          <% if (laporan.length === 0) { %>
+            <tr>
+              <td colspan="7" class="p-8 text-center text-muted-foreground">
+                Tidak ada laporan lembur yang ditemukan atau memerlukan persetujuan.
+              </td>
+            </tr>
+          <% } else { %>
+            <% laporan.forEach(item => { %>
+              <tr class="hover:bg-muted/40 transition-colors">
+                <td class="p-4 font-mono font-semibold text-xs"><%= item.request_number %></td>
+                <td class="p-4 font-medium"><%= item.title %></td>
+                <td class="p-4">
+                  <div class="font-medium"><%= item.submitted_by_name %></div>
+                  <div class="text-xs text-muted-foreground"><%= item.unit_name %></div>
+                </td>
+                <td class="p-4 text-xs text-muted-foreground">
+                  <%= item.submitted_at ? new Date(item.submitted_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '-' %>
+                </td>
+                <td class="p-4 text-center font-medium"><%= item.total_anggota %> Orang</td>
+                <td class="p-4 text-center">
+                  <% if (item.status === 'completed') { %>
+                    <span class="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">Completed</span>
+                  <% } else if (item.status === 'approved') { %>
+                    <span class="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">Approved</span>
+                  <% } else { %>
+                    <span class="inline-flex items-center rounded-full bg-destructive/10 px-2.5 py-0.5 text-xs font-semibold text-destructive">Rejected</span>
+                  <% } %>
+                </td>
+                <td class="p-4 text-right">
+                  <a href="/pimpinan/laporan/<%= item.id %>" class="btn btn-sm btn-outline">Detail & Review</a>
+                </td>
+              </tr>
+            <% }) %>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+
+    <% if (pagination.totalPages > 1) { %>
+      <div class="p-4 border-t flex items-center justify-between bg-muted/20">
+        <span class="text-xs text-muted-foreground">
+          Menampilkan <span class="font-medium"><%= (pagination.currentPage - 1) * pagination.limit + 1 %></span> - 
+          <span class="font-medium"><%= Math.min(pagination.currentPage * pagination.limit, pagination.total) %></span> dari 
+          <span class="font-medium"><%= pagination.total %></span> laporan
+        </span>
+        <div class="flex gap-1">
+          <a href="/pimpinan/laporan?page=<%= pagination.currentPage - 1 %>&status=<%= filters.status %>&search=<%= filters.search %>" 
+             class="btn btn-sm btn-outline <%= pagination.currentPage === 1 ? 'pointer-events-none opacity-50' : '' %>">
+            Previous
+          </a>
+          <a href="/pimpinan/laporan?page=<%= pagination.currentPage + 1 %>&status=<%= filters.status %>&search=<%= filters.search %>" 
+             class="btn btn-sm btn-outline <%= pagination.currentPage === pagination.totalPages ? 'pointer-events-none opacity-50' : '' %>">
+            Next
+          </a>
+        </div>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../layouts/footer') %>
