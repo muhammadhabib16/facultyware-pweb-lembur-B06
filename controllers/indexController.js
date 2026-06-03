@@ -1,5 +1,5 @@
 const bcrypt = require("bcryptjs");
-const db = require("../lib/db"); // Menggunakan utilitas lib/db terpusat sesuai konvensi
+const db = require("../lib/db"); // Menggunakan utilitas lib/db terpusat sesuai konvensi proyek
 
 const index = (req, res) => {
   res.render("index", { title: "Express" });
@@ -7,7 +7,11 @@ const index = (req, res) => {
 
 const home = (req, res) => {
   // Menggunakan req.session.name atau email yang ditarik dari DB saat login
-  res.render("home", { title: "Home", user: req.session.name, role: req.session.role });
+  res.render("home", {
+    title: "Home",
+    user: req.session.name,
+    role: req.session.role,
+  });
 };
 
 const loginPage = (req, res) => {
@@ -22,26 +26,38 @@ const login = async (req, res, next) => {
   const { email, password } = req.body;
 
   try {
-    // 2. Cari user berdasarkan email di tabel users riil Bos
-    const [rows] = await db.query("SELECT * FROM users WHERE email = ?", [email]);
+    // ─────────────────────────────────────────────────────────────────────────
+    // DEBUG LOG: Untuk melihat isi data input fisik yang ditangkap terminal Bos
+    console.log("--- DEBUG LOGIN ---");
+    console.log("Email yang diterima server:", email);
+    console.log("Password yang diterima server:", password);
+    // ─────────────────────────────────────────────────────────────────────────
 
-    // KONSEKUENSI HTMX: Jika gagal, kembalikan potongan HTML atau kirim status error dinamis
+    // 2. Cari user berdasarkan email di tabel users riil Bos
+    const [rows] = await db.query("SELECT * FROM users WHERE email = ?", [
+      email,
+    ]);
+
+    console.log("Jumlah user ditemukan di DB:", rows.length);
+    console.log("───────────────────");
+
     if (rows.length === 0) {
       return res.render("login", {
         title: "Login",
-        error: "Email atau password salah, Bos!",
+        error: "Email tidak terdaftar di database, Bos!",
       });
     }
 
     const user = rows[0];
-    
-    // 3. Verifikasi kata sandi terenkripsi menggunakan bcryptjs
+
+    // 3. Verifikasi kata sandi terenkripsi menggunakan bcryptjs (Cukup Sekali Saja)
+    // ALASAN PERBAIKAN: Menghapus deklarasi ganda variabel 'user' & 'isMatch' sebelumnya agar tidak crash
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
       return res.render("login", {
         title: "Login",
-        error: "Email atau password salah, Bos!",
+        error: "Password yang Bos masukkan salah!",
       });
     }
 
@@ -51,7 +67,7 @@ const login = async (req, res, next) => {
       `SELECT r.name FROM roles r 
        JOIN model_has_roles mhr ON r.id = mhr.role_id 
        WHERE mhr.model_id = ? AND mhr.model_type = 'User'`,
-      [user.id]
+      [user.id],
     );
 
     const userRole = roles.length > 0 ? roles[0].name : null;
@@ -65,7 +81,7 @@ const login = async (req, res, next) => {
          JOIN role_has_permissions rhp ON p.id = rhp.permission_id
          JOIN roles r ON rhp.role_id = r.id
          WHERE r.name = ?`,
-        [userRole]
+        [userRole],
       );
       userPermissions = perms.map((p) => p.name); // Transformasi array of object menjadi array of string
     }
@@ -76,7 +92,7 @@ const login = async (req, res, next) => {
     req.session.name = user.name;
     req.session.email = user.email;
     req.session.role = userRole;
-    req.session.permissions = userPermissions; // Berisi array seperti ['create_penugasan', 'view_reports']
+    req.session.permissions = userPermissions; // Berisi array seperti ['view_overtime_reports', 'approve_overtime_reports']
 
     // 7. KONSEKUENSI HTMX: Cek apakah request datang dari HTMX
     // Tujuannya: Jika disubmit lewat HTMX, gunakan header khusus agar browser berpindah halaman dengan lancar
@@ -97,7 +113,7 @@ const logout = (req, res, next) => {
     if (err) {
       return next(err);
     }
-    
+
     // Penanganan redirect logout untuk HTMX maupun request biasa
     if (req.headers["hx-request"]) {
       res.setHeader("HX-Redirect", "/login");
