@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <script>
+      (() => {
+        try {
+          const stored = localStorage.getItem("themeMode");
+          if (stored ? stored === "dark" : matchMedia("(prefers-color-scheme: dark)").matches) {
+            document.documentElement.classList.add("dark");
+          }
+        } catch (_) {}
+      })();
+    </script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title><%= title %> — Facultyware</title>
+    <link rel="stylesheet" href="/assets/styles.css" />
+    <script src="/assets/js/basecoat.js?v=0.3.11" defer></script>
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+  </head>
+  <body class="bg-background flex min-h-screen text-foreground">
+
+    <%- include('../partials/sidebar') %>
+
+    <main class="flex-1 p-8 md:p-10 space-y-6" hx-boost="true">
+      <div class="flex items-center gap-4">
+        <a href="/pimpinan/penugasan" class="btn btn-sm btn-outline cursor-pointer">← Kembali</a>
+        <div>
+          <h1 class="text-2xl font-bold tracking-tight"><%= tugas.request_number %></h1>
+          <p class="text-xs text-muted-foreground">Rincian lembar perintah kerja lembur internal.</p>
+        </div>
+      </div>
+
+      <a href="/pimpinan/penugasan/<%= tugas.id %>/edit" class="btn btn-sm btn-primary">Edit Penugasan</a>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div data-slot="card" class="rounded-xl border bg-card p-6 md:col-span-2 space-y-4">
+          <div>
+            <h3 class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Judul Agenda Kerja</h3>
+            <p class="text-lg font-bold mt-1 text-foreground"><%= tugas.title %></p>
+          </div>
+          <hr />
+          <div>
+            <h3 class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Instruksi / Catatan Pimpinan</h3>
+            <p class="text-sm text-muted-foreground leading-relaxed mt-1 bg-muted/40 p-4 rounded-lg border border-dashed">
+              <%= tugas.description || 'Tidak ada deskripsi tambahan yang disertakan, Bos.' %>
+            </p>
+          </div>
+        </div>
+
+        <div data-slot="card" class="rounded-xl border bg-card p-6 space-y-4 text-sm">
+          <h2 class="font-bold border-b pb-2">Status & Pelaksana</h2>
+          <div>
+            <span class="text-muted-foreground block text-xs">Pegawai Pelaksana:</span>
+            <span class="font-semibold block"><%= tugas.pegawai_name %></span>
+            <span class="text-xs text-muted-foreground font-mono"><%= tugas.pegawai_nip %> — <%= tugas.unit_name %></span>
+          </div>
+          <div>
+            <span class="text-muted-foreground block text-xs">Tanggal Pelaksanaan:</span>
+            <span class="font-semibold"><%= new Date(tugas.request_date).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }) %></span>
+          </div>
+          <div>
+            <span class="text-muted-foreground block text-xs">Rencana Jam Kerja:</span>
+            <span class="font-semibold text-xs block font-mono text-indigo-500">
+              <%= new Date(tugas.planned_start_time).toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'}) %> s/d 
+              <%= new Date(tugas.planned_end_time).toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'}) %>
+            </span>
+          </div>
+          <div>
+            <span class="text-muted-foreground block text-xs">Diterbitkan Oleh:</span>
+            <span class="font-medium text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full"><%= tugas.pembuat_nama || 'Pimpinan' %></span>
+          </div>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>

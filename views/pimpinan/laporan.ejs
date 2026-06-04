@@ -39,9 +39,11 @@
     
     <script src="https://unpkg.com/htmx.org@2.0.4"></script>
   </head>
-  <body class="bg-background">
+  <body class="bg-background flex min-h-screen text-foreground overflow-x-hidden">
 
-    <div class="container mx-auto px-4 py-8" hx-boost="true">
+    <%- include('../partials/sidebar') %>
+
+    <main class="flex-1 p-8 md:p-10 space-y-6" hx-boost="true">
       <div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 class="text-2xl font-bold tracking-tight"><%= title %></h1>
@@ -152,7 +154,7 @@
           </div>
         <% } %>
       </div>
-    </div>
+    </main>
     
   </body>
 </html>

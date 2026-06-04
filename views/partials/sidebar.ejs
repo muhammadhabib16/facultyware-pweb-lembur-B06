@@ -1,0 +1,81 @@
+<style>
+  .glass-sidebar {
+    background-color: var(--color-card);
+    border-right: 1px solid var(--color-border);
+  }
+  .sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.625rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    color: var(--color-foreground);
+    text-decoration: none;
+  }
+  .sidebar-link:hover {
+    background-color: var(--color-muted);
+    transform: translateX(4px);
+    color: var(--color-primary);
+  }
+  .sidebar-logo-icon {
+    background: var(--color-primary);
+    color: var(--color-primary-foreground);
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    font-weight: bold;
+    font-size: 0.875rem;
+  }
+  .sidebar-section-title {
+    padding: 1.25rem 0.75rem 0.5rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-muted-foreground);
+  }
+</style>
+<aside class="w-64 glass-sidebar min-h-screen flex flex-col justify-between z-10 sticky top-0">
+  <div class="p-6">
+    <div class="flex items-center gap-3 mb-8 pb-4 border-b">
+      <div class="sidebar-logo-icon">FW</div>
+      <span class="font-bold text-xl tracking-tight text-foreground">Facultyware</span>
+    </div>
+
+    <div class="mb-8 p-3.5 bg-muted rounded-xl border text-sm flex flex-col gap-1 shadow-sm">
+      <span class="font-semibold truncate text-foreground"><%= user %></span>
+      <span class="text-xs capitalize bg-primary text-primary-foreground w-fit px-2.5 py-0.5 rounded-full font-medium tracking-wide"><%= role %></span>
+    </div>
+
+    <nav class="flex flex-col gap-1" hx-boost="true">
+      <a href="/home" class="sidebar-link">Dashboard</a>
+
+      <% if (role === 'pegawai') { %>
+        <div class="sidebar-section-title">Modul Pegawai</div>
+        <a href="/pegawai/permohonan" class="sidebar-link">Ajukan Lembur</a>
+        <a href="/pegawai/riwayat" class="sidebar-link">Riwayat Lembur</a>
+      <% } %>
+
+      <% if (role === 'pimpinan') { %>
+        <div class="sidebar-section-title">Modul Pimpinan</div>
+        <a href="/pimpinan/penugasan/buat" class="sidebar-link">Buat Tugas Lembur</a>
+        <a href="/pimpinan/penugasan" class="sidebar-link">Daftar Tugas Anda</a>
+        <a href="/pimpinan/laporan" class="sidebar-link">Daftar Laporan</a>
+      <% } %>
+
+      <% if (role === 'admin') { %>
+        <div class="sidebar-section-title">Modul Admin</div>
+        <a href="/pimpinan/penugasan" class="sidebar-link">Daftar Tugas Anda</a>
+        <a href="/admin/rekap" class="sidebar-link">Rekap Bulanan</a>
+      <% } %>
+    </nav>
+  </div>
+
+  <div class="p-6 border-t">
+    <button hx-post="/logout" hx-trigger="click" class="btn w-full cursor-pointer flex items-center justify-center gap-2 border border-destructive text-destructive bg-transparent hover:bg-destructive hover:text-white transition-all font-semibold shadow-sm">
+      Keluar Aplikasi
+    </button>
+  </div>
+</aside>

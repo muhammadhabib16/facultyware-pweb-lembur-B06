@@ -168,7 +168,7 @@ exports.konfirmasiLaporan = async (req, res) => {
 
     // Validasi: laporan harus dalam status 'completed' agar bisa dikonfirmasi
     const [[laporan]] = await connection.query(
-      `SELECT id, status FROM overtime_requests WHERE id = ? AND status = 'completed'`,
+      `SELECT id, status, submitted_by FROM overtime_requests WHERE id = ? AND status = 'completed'`,
       [id],
     );
 
@@ -183,9 +183,9 @@ exports.konfirmasiLaporan = async (req, res) => {
     // Update status overtime_request menjadi 'approved'
     await connection.query(
       `UPDATE overtime_requests
-       SET status = 'approved', approved_by = ?, approved_at = NOW(), updated_at = NOW()
+       SET status = 'approved', approved_by = ?, approved_by_id = ?, approved_at = NOW(), updated_at = NOW()
        WHERE id = ?`,
-      [approverId, id],
+      [approverId, approverId, id],
     );
 
     // Catat ke overtime_approval_logs
@@ -193,7 +193,7 @@ exports.konfirmasiLaporan = async (req, res) => {
       `INSERT INTO overtime_approval_logs
          (overtime_request_id, approver_id, employee_id, status, notes, action_date, created_at, updated_at)
        VALUES (?, ?, ?, 'approved', NULL, NOW(), NOW(), NOW())`,
-      [id, approverId, approverId],
+      [id, approverId, laporan.submitted_by],
     );
 
     await connection.commit();
@@ -237,7 +237,7 @@ exports.tolakLaporan = async (req, res) => {
 
     // Validasi status
     const [[laporan]] = await connection.query(
-      `SELECT id, status FROM overtime_requests WHERE id = ? AND status = 'completed'`,
+      `SELECT id, status, submitted_by FROM overtime_requests WHERE id = ? AND status = 'completed'`,
       [id],
     );
 
@@ -252,9 +252,9 @@ exports.tolakLaporan = async (req, res) => {
     // Update status menjadi 'rejected'
     await connection.query(
       `UPDATE overtime_requests
-       SET status = 'rejected', approved_by = ?, approved_at = NOW(), updated_at = NOW()
+       SET status = 'rejected', approved_by = ?, approved_by_id = ?, approved_at = NOW(), updated_at = NOW()
        WHERE id = ?`,
-      [approverId, id],
+      [approverId, approverId, id],
     );
 
     // Catat ke overtime_approval_logs dengan catatan revisi
@@ -262,7 +262,7 @@ exports.tolakLaporan = async (req, res) => {
       `INSERT INTO overtime_approval_logs
          (overtime_request_id, approver_id, employee_id, status, notes, action_date, created_at, updated_at)
        VALUES (?, ?, ?, 'rejected', ?, NOW(), NOW(), NOW())`,
-      [id, approverId, approverId, catatan_revisi.trim()],
+      [id, approverId, laporan.submitted_by, catatan_revisi.trim()],
     );
 
     await connection.commit();

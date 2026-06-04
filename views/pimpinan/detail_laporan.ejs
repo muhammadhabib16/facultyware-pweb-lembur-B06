@@ -1,6 +1,28 @@
-<%- include('../layouts/header') %>
+<!doctype html>
+<html lang="en">
+  <head>
+    <script>
+      (() => {
+        try {
+          const stored = localStorage.getItem("themeMode");
+          if (stored ? stored === "dark" : matchMedia("(prefers-color-scheme: dark)").matches) {
+            document.documentElement.classList.add("dark");
+          }
+        } catch (_) {}
+      })();
+    </script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title><%= title %> — Facultyware</title>
+    <link rel="stylesheet" href="/assets/styles.css" />
+    <script src="/assets/js/basecoat.js?v=0.3.11" defer></script>
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+  </head>
+  <body class="bg-background flex min-h-screen text-foreground overflow-x-hidden">
 
-<div class="container mx-auto px-4 py-8">
+    <%- include('../partials/sidebar') %>
+
+    <main class="flex-1 p-8 md:p-10 space-y-6" hx-boost="true">
   <div class="mb-6 flex items-center justify-between" hx-boost="true">
     <a href="/pimpinan/laporan" class="btn btn-sm btn-outline">
       ← Kembali ke Daftar Laporan
@@ -136,8 +158,6 @@
       </div>
     </div>
   </div>
-</div>
-
 <div id="rejectModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-fade-in">
   <div class="bg-background border rounded-lg shadow-lg w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-200">
     <div class="p-4 border-b flex justify-between items-center bg-muted/20">
@@ -172,4 +192,6 @@
   }
 </script>
 
-<%- include('../layouts/footer') %>
+    </main>
+  </body>
+</html>
