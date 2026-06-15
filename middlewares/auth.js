@@ -16,8 +16,8 @@ async function isAuthenticated(req, res, next) {
     // 2. AMBIL DATA PHYSICAL EMPLOYEE (BRIDGE LOGIC)
     // ALASAN: Mengambil ID pegawai/pimpinan dari tabel 'employees' yang terhubung dengan users.id Bos
     const [employees] = await db.query(
-      "SELECT id FROM employees WHERE id = ?",
-      [req.session.userId]
+      "SELECT id FROM employees WHERE name = ?",
+      [req.session.name]
     );
 
     if (employees.length > 0) {
