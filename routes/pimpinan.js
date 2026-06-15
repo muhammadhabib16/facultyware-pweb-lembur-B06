@@ -76,4 +76,11 @@ router.post(
   pimpinanController.updatePenugasan,
 );
 
+// ── Fitur 17: Pimpinan menghapus/membatalkan penugasan lembur (Darrel) ──
+router.delete(
+  "/penugasan/:id",
+  checkPermission("edit_overtime_assignments"),
+  pimpinanController.hapusPenugasan
+);
+
 module.exports = router;

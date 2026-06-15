@@ -324,3 +324,40 @@ exports.updatePenugasan = async (req, res, next) => {
     connection.release();
   }
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FITUR 17: MENGHAPUS PENUGASAN LEMBUR (DELETE /pimpinan/penugasan/:id)
+// ─────────────────────────────────────────────────────────────────────────────
+exports.hapusPenugasan = async (req, res, next) => {
+  const connection = await db.getConnection();
+  try {
+    const { id } = req.params;
+
+    // Memulai transaksi agar penghapusan di dua tabel aman (sama seperti fitur Update)
+    await connection.beginTransaction();
+
+    // 1. Hapus data di tabel anak (overtime_request_members) terlebih dahulu
+    await connection.query(
+      "DELETE FROM overtime_request_members WHERE overtime_request_id = ?",
+      [id]
+    );
+
+    // 2. Hapus data di tabel induk (overtime_requests)
+    await connection.query(
+      "DELETE FROM overtime_requests WHERE id = ?",
+      [id]
+    );
+
+    await connection.commit();
+
+    // Kunci HTMX: Kirim respons teks kosong agar baris tabel langsung menghilang di layar
+    res.status(200).send('');
+  } catch (err) {
+    await connection.rollback();
+    console.error("hapusPenugasan error:", err);
+    // Jika gagal, tampilkan pesan error ini di dalam tabel
+    res.status(500).send('<tr><td colspan="6" class="p-4 text-center text-red-500 font-medium bg-red-50">Gagal menghapus data penugasan. Server error.</td></tr>');
+  } finally {
+    connection.release();
+  }
+};

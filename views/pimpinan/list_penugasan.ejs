@@ -72,10 +72,19 @@
                         <%= item.status %>
                       </span>
                     </td>
-                    <td class="p-4 text-right">
-                      <a href="/pimpinan/penugasan/<%= item.id %>" class="btn btn-sm btn-outline cursor-pointer">Lihat Detail</a>
-                      <a href="/pimpinan/penugasan/<%= item.id %>/edit" class="btn btn-sm btn-secondary text-xs">Ubah</a>
-                    </td>
+                  <td class="p-4 text-right flex justify-end gap-2">
+  <a href="/pimpinan/penugasan/<%= item.id %>" class="btn btn-sm btn-outline cursor-pointer">Lihat Detail</a>
+  <a href="/pimpinan/penugasan/<%= item.id %>/edit" class="btn btn-sm btn-secondary text-xs">Ubah</a>
+  
+  <button 
+    hx-delete="/pimpinan/penugasan/<%= item.id %>" 
+    hx-confirm="Apakah Anda yakin ingin membatalkan/menghapus penugasan <%= item.request_number %> ini secara permanen?" 
+    hx-target="closest tr" 
+    hx-swap="outerHTML"
+    class="btn btn-sm bg-red-500 text-white hover:bg-red-600 border-none text-xs">
+    Hapus
+  </button>
+</td>
                   </tr>
                 <% }) %>
               <% } else { %>
