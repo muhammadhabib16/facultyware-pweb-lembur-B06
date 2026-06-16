@@ -11,4 +11,7 @@ router.get("/rekap", adminController.halamanRekap);
 // Tombol Export Excel
 router.get("/rekap/export", adminController.exportExcel);
 
+// Jalur REST API Rekap Universal
+router.get("/api/rekap-lembur", adminController.apiRekapLembur);
+
 module.exports = router;

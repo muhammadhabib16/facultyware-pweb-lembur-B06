@@ -112,3 +112,38 @@ exports.exportExcel = async (req, res, next) => {
     next(err);
   }
 };
+
+// 3. Endpoint REST API Rekap Lembur (Tugas Darrel)
+exports.apiRekapLembur = async (req, res) => {
+  try {
+    const { start_date, end_date } = req.query;
+    
+    // Query dasar
+    let query = `
+      SELECT or2.request_number, or2.title, e.name as pegawai, or2.status
+      FROM overtime_requests or2
+      LEFT JOIN employees e ON or2.submitted_by = e.id
+      WHERE 1=1
+    `;
+    let params = [];
+
+    // Jika parameter filter tanggal diberikan di URL
+    if (start_date && end_date) {
+      query += " AND DATE(or2.request_date) BETWEEN ? AND ?";
+      params.push(start_date, end_date);
+    }
+
+    const [dataRekap] = await db.query(query, params);
+
+    // KUNCI REST API: Kita menggunakan res.json(), bukan res.render()
+    res.json({
+      status: "success",
+      total_data: dataRekap.length,
+      data: dataRekap
+    });
+    
+  } catch (err) {
+    console.error("apiRekapLembur error:", err);
+    res.status(500).json({ status: "error", message: err.message });
+  }
+};
