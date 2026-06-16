@@ -214,11 +214,9 @@ exports.formEditPenugasan = async (req, res, next) => {
     );
 
     if (!tugas) {
-      return res
-        .status(404)
-        .render("error", {
-          message: "Data penugasan tidak ditemukan untuk diedit, Bos!",
-        });
+      return res.status(404).render("error", {
+        message: "Data penugasan tidak ditemukan untuk diedit, Bos!",
+      });
     }
 
     // 2. Ambil daftar karyawan aktif untuk dropdown pengubahan personil pelaksana
@@ -326,48 +324,63 @@ exports.updatePenugasan = async (req, res, next) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// FITUR 17: MENGHAPUS PENUGASAN (POST /pimpinan/penugasan/:id/delete)
+// FITUR 17: MENGHAPUS PENUGASAN LEMBUR (DELETE /pimpinan/penugasan/:id)
 // ─────────────────────────────────────────────────────────────────────────────
 exports.hapusPenugasan = async (req, res, next) => {
   const connection = await db.getConnection();
   try {
     const { id } = req.params;
 
+    // Memulai transaksi agar penghapusan aman
     await connection.beginTransaction();
 
-    // Pastikan status penugasan masih 'assigned' atau 'pending' dan benar-benar penugasan (REQ-ASSIGN)
+    // 1. Validasi Keamanan (Logika Bos)
     const [[tugas]] = await connection.query(
       "SELECT id, status FROM overtime_requests WHERE id = ? AND request_number LIKE 'REQ-ASSIGN-%'",
-      [id]
+      [id],
     );
 
+    // Jika data tidak ada
     if (!tugas) {
       await connection.rollback();
-      return res.status(404).render("error", { message: "Data penugasan tidak ditemukan." });
+      return res
+        .status(404)
+        .send(
+          '<tr><td colspan="6" class="p-4 text-center text-red-500 font-medium bg-red-50">Data penugasan tidak ditemukan.</td></tr>',
+        );
     }
 
-    if (tugas.status !== 'assigned' && tugas.status !== 'pending') {
+    // Jika status sudah berjalan
+    if (tugas.status !== "assigned" && tugas.status !== "pending") {
       await connection.rollback();
-      return res.status(400).render("error", { message: "Penugasan tidak dapat dihapus karena sudah mulai diproses oleh pegawai." });
+      return res
+        .status(400)
+        .send(
+          '<tr><td colspan="6" class="p-4 text-center text-yellow-600 font-medium bg-yellow-50">Penugasan gagal dihapus karena sudah diproses oleh pegawai.</td></tr>',
+        );
     }
 
-    // Hapus dari pivot table dulu karena foreign key
-    await connection.query("DELETE FROM overtime_request_members WHERE overtime_request_id = ?", [id]);
-    
-    // Hapus dari tabel utama
+    // 2. Eksekusi Penghapusan
+    await connection.query(
+      "DELETE FROM overtime_request_members WHERE overtime_request_id = ?",
+      [id],
+    );
     await connection.query("DELETE FROM overtime_requests WHERE id = ?", [id]);
 
     await connection.commit();
 
-    if (req.headers["hx-request"]) {
-      res.set("HX-Redirect", "/pimpinan/penugasan");
-      return res.sendStatus(204);
-    }
-    res.redirect("/pimpinan/penugasan?toast=hapus_berhasil");
+    // 3. Respons HTMX (Logika Darrel)
+    // Mengembalikan string kosong agar elemen (baris tabel) langsung terhapus dari DOM
+    res.status(200).send("");
   } catch (err) {
     await connection.rollback();
     console.error("hapusPenugasan error:", err);
-    next(err);
+    // Fallback error di UI
+    res
+      .status(500)
+      .send(
+        '<tr><td colspan="6" class="p-4 text-center text-red-500 font-medium bg-red-50">Gagal menghapus data penugasan. Server error.</td></tr>',
+      );
   } finally {
     connection.release();
   }

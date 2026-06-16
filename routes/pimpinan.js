@@ -50,7 +50,7 @@ router.post(
   pimpinanController.simpanPenugasan,
 );
 
-// ── Fitur 10: Pimpinan melihat daftar & detail penugasan (Muhammad Habib) ──
+// ── Fitur 10: Pimpinan melihat daftar & detail penugasan  ──
 router.get(
   "/penugasan",
   checkPermission("view_overtime_assignments"),
@@ -63,7 +63,7 @@ router.get(
   pimpinanController.detailPenugasan,
 );
 
-// ── Fitur 11: Pimpinan mengubah data penugasan lembur (Muhammad Habib) ──
+// ── Fitur 11: Pimpinan mengubah data penugasan lembur  ──
 router.get(
   "/penugasan/:id/edit",
   checkPermission("edit_overtime_assignments"),
@@ -76,10 +76,10 @@ router.post(
   pimpinanController.updatePenugasan,
 );
 
-// ── Fitur 17: Pimpinan membatalkan/menghapus penugasan ──
-router.post(
-  "/penugasan/:id/delete",
-  checkPermission("delete_overtime_assignments"),
+// ── Fitur 17: Pimpinan menghapus/membatalkan penugasan lembur──
+router.delete(
+  "/penugasan/:id",
+  checkPermission("edit_overtime_assignments"),
   pimpinanController.hapusPenugasan,
 );
 

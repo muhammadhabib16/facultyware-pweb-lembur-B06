@@ -83,11 +83,20 @@
                         <%= item.status === 'waiting_approval' ? 'Waiting Approval' : item.status %>
                       </span>
                     </td>
-                    <td class="p-4 text-right">
+<td class="p-4 text-right flex justify-end gap-2">
                       <a href="/pimpinan/penugasan/<%= item.id %>" class="btn btn-sm btn-outline cursor-pointer">Lihat Detail</a>
+                      
                       <% if (item.status === 'assigned' || item.status === 'pending') { %>
                         <a href="/pimpinan/penugasan/<%= item.id %>/edit" class="btn btn-sm btn-secondary text-xs">Ubah</a>
-                        <button hx-post="/pimpinan/penugasan/<%= item.id %>/delete" hx-confirm="Yakin ingin membatalkan/menghapus penugasan ini?" class="btn btn-sm btn-outline border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground text-xs">Hapus</button>
+                        
+                        <button 
+                          hx-delete="/pimpinan/penugasan/<%= item.id %>" 
+                          hx-confirm="Apakah Anda yakin ingin membatalkan/menghapus penugasan <%= item.request_number %> ini secara permanen?" 
+                          hx-target="closest tr" 
+                          hx-swap="outerHTML"
+                          class="btn btn-sm border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground btn-outline text-xs">
+                          Hapus
+                        </button>
                       <% } %>
                     </td>
                   </tr>
