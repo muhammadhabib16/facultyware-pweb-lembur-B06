@@ -1,135 +1,257 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <script>
-      (() => {
-        try {
-          const stored = localStorage.getItem("themeMode");
-          if (
-            stored
-              ? stored === "dark"
-              : matchMedia("(prefers-color-scheme: dark)").matches
-          ) {
-            document.documentElement.classList.add("dark");
-          }
-        } catch (_) {}
-      })();
-    </script>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title><%= title %> — Facultyware Central Panel</title>
-    <link rel="stylesheet" href="/assets/styles.css" />
 
-    <script src="/assets/js/basecoat.js?v=0.3.11" defer></script>
-    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
-  </head>
-  <body class="bg-background flex min-h-screen text-foreground overflow-x-hidden">
+<head>
+  <script>
+    (() => {
+      try {
+        const stored = localStorage.getItem("themeMode");
+        if (
+          stored
+            ? stored === "dark"
+            : matchMedia("(prefers-color-scheme: dark)").matches
+        ) {
+          document.documentElement.classList.add("dark");
+        }
+      } catch (_) { }
+    })();
+  </script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>
+    <%= title %> — Facultyware Central Panel
+  </title>
+  <link rel="stylesheet" href="/assets/styles.css" />
 
-    <%- include('partials/sidebar') %>
+  <script src="/assets/js/basecoat.js?v=0.3.11" defer></script>
+  <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+</head>
 
-    <main class="flex-1 p-6 md:p-10 space-y-8 w-full flex flex-col" hx-boost="true">
-      
-      <div class="flex flex-col gap-1.5 border-b pb-6">
-        <h1 class="text-3xl font-extrabold tracking-tight">
-          Selamat Datang Kembali, <span class="text-primary font-black"> <%= user %>!</span>
+<body
+  class="bg-background flex min-h-screen text-foreground overflow-x-hidden selection:bg-primary/20 selection:text-primary">
+
+  <%- include('partials/sidebar') %>
+
+    <main class="flex-1 p-4 md:p-6 space-y-6 max-w-6xl mx-auto w-full flex flex-col relative" hx-boost="true">
+      <!-- Decorative background blur -->
+      <div
+        class="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none -z-10">
+      </div>
+
+      <div class="flex flex-col gap-2 border-b border-border/40 pb-8 relative">
+        <div
+          class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary w-fit text-xs font-bold mb-2 shadow-sm border border-primary/20">
+          <span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+          Sistem Online
+        </div>
+        <h1 class="text-4xl font-extrabold tracking-tight text-foreground">
+          Selamat Datang Kembali, <span
+            class="bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
+            <%= user %>!
+          </span>
         </h1>
-        <p class="text-muted-foreground text-sm max-w-2xl leading-relaxed">
-          Sistem Panel Utama Facultyware siap digunakan. Berikut adalah ringkasan status operasional pelaksanaan kerja lembur riil hari ini.
+        <p class="text-muted-foreground text-base max-w-2xl leading-relaxed">
+          Sistem Panel Utama Facultyware siap digunakan. Berikut adalah ringkasan status operasional pelaksanaan kerja
+          lembur riil hari ini.
         </p>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
-        <div data-slot="card" class="rounded-xl border bg-card text-card-foreground p-6 flex flex-col justify-between shadow-xs hover:shadow-md transition-all duration-300 relative overflow-hidden group hover:-translate-y-1">
-          <div class="absolute -right-4 -top-4 w-24 h-24 bg-primary/5 rounded-bl-full transition-transform duration-500 grouphover:scale-110"></div>
-          <span class="text-xs font-bold text-muted-foreground uppercase tracking-wider relative z-10">Total Anggota Tim</span>
-          <div class="flex items-baseline gap-2 mt-4 relative z-10">
-            <span class="text-4xl font-black tracking-tight text-primary font-mono"><%= stats.totalTim %></span>
-            <span class="text-xs text-muted-foreground font-medium">Karyawan Aktif</span>
+
+        <div data-slot="card"
+          class="rounded-2xl border border-border/50 bg-card/80 backdrop-blur-sm text-card-foreground p-5 flex flex-col justify-between shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group hover:-translate-y-1 cursor-default">
+          <div
+            class="absolute -right-6 -top-6 w-32 h-32 bg-primary/10 rounded-full blur-2xl transition-transform duration-500 group-hover:scale-150">
+          </div>
+          <div class="flex justify-between items-start relative z-10">
+            <span class="text-xs font-bold text-muted-foreground uppercase tracking-widest">Total Anggota Tim</span>
+            <div class="p-2.5 bg-primary/10 rounded-xl text-primary shadow-inner">
+              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+              </svg>
+            </div>
+          </div>
+          <div class="flex items-baseline gap-3 mt-5 relative z-10">
+            <span class="text-5xl font-black tracking-tighter text-foreground">
+              <%= stats.totalTim %>
+            </span>
+            <span class="text-sm text-muted-foreground font-medium">Karyawan Aktif</span>
           </div>
         </div>
 
-        <div data-slot="card" class="rounded-xl border bg-card text-card-foreground p-6 flex flex-col justify-between shadow-xs hover:shadow-md transition-all duration-300 relative overflow-hidden group hover:-translate-y-1">
-          <div class="absolute -right-4 -top-4 w-24 h-24 bg-amber-500/5 rounded-bl-full transition-transform duration-500 group-hover:scale-110"></div>
-          <span class="text-xs font-bold text-muted-foreground uppercase tracking-wider relative z-10">Butuh Review Laporan</span>
-          <div class="flex items-baseline gap-2 mt-4 relative z-10">
-            <span class="text-4xl font-black tracking-tight font-mono" style="<%= stats.pendingReview > 0 ? 'color: #f59e0b;' : 'color: var(--muted-foreground);' %>">
+        <div data-slot="card"
+          class="rounded-2xl border border-border/50 bg-card/80 backdrop-blur-sm text-card-foreground p-5 flex flex-col justify-between shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group hover:-translate-y-1 cursor-default">
+          <div
+            class="absolute -right-6 -top-6 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl transition-transform duration-500 group-hover:scale-150">
+          </div>
+          <div class="flex justify-between items-start relative z-10">
+            <span class="text-xs font-bold text-muted-foreground uppercase tracking-widest">Butuh Review</span>
+            <div class="p-2.5 bg-amber-500/10 rounded-xl text-amber-500 shadow-inner">
+              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <circle cx="12" cy="14" r="3" />
+                <line x1="12" y1="11" x2="12" y2="14" />
+                <line x1="12" y1="14" x2="14.5" y2="15.5" />
+              </svg>
+            </div>
+          </div>
+          <div class="flex items-baseline gap-3 mt-5 relative z-10">
+            <span class="text-5xl font-black tracking-tighter"
+              style="<%= stats.pendingReview > 0 ? 'color: #f59e0b;' : 'color: var(--foreground);' %>">
               <%= stats.pendingReview %>
             </span>
-            <span class="text-xs text-muted-foreground font-medium">Berkas Menunggu</span>
+            <span class="text-sm text-muted-foreground font-medium">Berkas Menunggu</span>
           </div>
         </div>
 
-        <div data-slot="card" class="rounded-xl border bg-card text-card-foreground p-6 flex flex-col justify-between shadow-xs hover:shadow-md transition-all duration-300 relative overflow-hidden group hover:-translate-y-1">
-          <div class="absolute -right-4 -top-4 w-24 h-24 bg-emerald-500/5 rounded-bl-full transition-transform duration-500 group-hover:scale-110"></div>
-          <span class="text-xs font-bold text-muted-foreground uppercase tracking-wider relative z-10">Lembur Disetujui</span>
-          <div class="flex items-baseline gap-2 mt-4 relative z-10">
-            <span class="text-4xl font-black tracking-tight text-emerald-500 font-mono"><%= stats.totalDisetujui %></span>
-            <span class="text-xs text-muted-foreground font-medium">Selesai Siklus</span>
+        <div data-slot="card"
+          class="rounded-2xl border border-border/50 bg-card/80 backdrop-blur-sm text-card-foreground p-5 flex flex-col justify-between shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group hover:-translate-y-1 cursor-default">
+          <div
+            class="absolute -right-6 -top-6 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl transition-transform duration-500 group-hover:scale-150">
+          </div>
+          <div class="flex justify-between items-start relative z-10">
+            <span class="text-xs font-bold text-muted-foreground uppercase tracking-widest">Disetujui</span>
+            <div class="p-2.5 bg-emerald-500/10 rounded-xl text-emerald-500 shadow-inner">
+              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+              </svg>
+            </div>
+          </div>
+          <div class="flex items-baseline gap-3 mt-5 relative z-10">
+            <span class="text-5xl font-black tracking-tighter text-emerald-500">
+              <%= stats.totalDisetujui %>
+            </span>
+            <span class="text-sm text-muted-foreground font-medium">Selesai Siklus</span>
           </div>
         </div>
       </div>
 
-      <div data-slot="card" class="rounded-xl border bg-card text-card-foreground shadow-xs p-6 space-y-4">
-        <div class="border-b pb-4">
-          <h2 class="text-xl font-bold tracking-tight">Aktivitas Agenda Lembur Terbaru</h2>
-          <p class="text-xs text-muted-foreground mt-1">Daftar permohonan dan penugasan lembur yang baru saja masuk ke dalam sistem database.</p>
+      <div data-slot="card"
+        class="rounded-2xl border border-border/50 bg-card text-card-foreground shadow-sm flex flex-col overflow-hidden">
+        <div class="p-6 border-b border-border/50 flex justify-between items-center bg-muted/10">
+          <div>
+            <h2 class="text-xl font-bold tracking-tight">Aktivitas Agenda Lembur Terbaru</h2>
+            <p class="text-sm text-muted-foreground mt-1">Daftar permohonan dan penugasan lembur yang baru saja masuk.
+            </p>
+          </div>
+          <div class="p-3 bg-primary/5 rounded-xl text-primary hidden md:block">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+            </svg>
+          </div>
         </div>
 
-        <div class="relative w-full overflow-x-auto border rounded-lg bg-card">
-          <table class="table w-full text-left border-collapse text-sm">
-            <thead class="bg-muted/50 font-semibold text-muted-foreground border-b">
+        <div class="w-full overflow-x-auto">
+          <table class="w-full text-left border-collapse text-sm">
+            <thead class="bg-muted/30 text-muted-foreground">
               <tr>
-                <th class="p-4 text-xs uppercase tracking-wider">No. Permohonan</th>
-                <th class="p-4 text-xs uppercase tracking-wider">Pegawai</th>
-                <th class="p-4 text-xs uppercase tracking-wider">Agenda</th>
-                <th class="p-4 text-xs uppercase tracking-wider text-center">Status</th>
-                <th class="p-4 text-xs uppercase tracking-wider text-right">Aksi</th>
+                <th class="p-4 text-xs uppercase tracking-widest font-bold">No. Permohonan</th>
+                <th class="p-4 text-xs uppercase tracking-widest font-bold">Pegawai</th>
+                <th class="p-4 text-xs uppercase tracking-widest font-bold">Agenda</th>
+                <th class="p-4 text-xs uppercase tracking-widest font-bold text-center">Status</th>
+                <th class="p-4 text-xs uppercase tracking-widest font-bold text-right">Aksi</th>
               </tr>
             </thead>
-            <tbody class="divide-y bg-card/50">
-              <% if (recentRequests && recentRequests.length > 0) { %>
-                <% recentRequests.forEach(item => { %>
-                  <tr class="hover:bg-muted/40 transition-colors duration-200">
-                    <td class="p-4 font-mono text-xs font-bold text-primary"><%= item.request_number %></td>
-                    <td class="p-4 font-semibold"><%= item.pegawai_name || 'Tidak Diketahui' %></td>
-                    <td class="p-4 text-muted-foreground max-w-[240px] truncate"><%= item.title %></td>
+            <tbody class="divide-y divide-border/50">
+              <% if (recentRequests && recentRequests.length> 0) { %>
+                <% recentRequests.forEach(item=> { %>
+                  <tr class="hover:bg-muted/30 transition-colors duration-200 group">
+                    <td
+                      class="p-4 font-mono text-xs font-bold text-primary group-hover:text-primary/80 transition-colors">
+                      <%= item.request_number %>
+                    </td>
+                    <td class="p-4 font-semibold text-foreground">
+                      <%= item.pegawai_name || 'Tidak Diketahui' %>
+                    </td>
+                    <td class="p-4 text-muted-foreground max-w-[240px] truncate">
+                      <%= item.title %>
+                    </td>
                     <td class="p-4 text-center">
-                      <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold tracking-wide capitalize
-                        <%= item.status === 'approved' ? 'bg-emerald-500/15 text-emerald-500' : 
-                            item.status === 'completed' ? 'bg-amber-500/15 text-amber-500' : 
-                            item.status === 'rejected' ? 'bg-destructive/15 text-destructive' : 
-                            'bg-muted text-muted-foreground' %>">
+                      <span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold tracking-wide capitalize
+                        <%= item.status === 'approved' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' : 
+                            item.status === 'waiting_approval' ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20' : 
+                            item.status === 'rejected' ? 'bg-destructive/10 text-destructive border border-destructive/20' : 
+                            'bg-muted text-muted-foreground border border-border' %>">
+                        <span class="w-1.5 h-1.5 rounded-full 
+                          <%= item.status === 'approved' ? 'bg-emerald-500' : 
+                              item.status === 'waiting_approval' ? 'bg-amber-500' : 
+                              item.status === 'rejected' ? 'bg-destructive' : 
+                              'bg-muted-foreground' %>"></span>
                         <%= item.status %>
                       </span>
                     </td>
                     <td class="p-4 text-right">
-                      <a href="/pimpinan/laporan/<%= item.id %>" class="btn btn-sm btn-outline cursor-pointer shadow-2xs font-medium">
+                      <a href="/pimpinan/laporan/<%= item.id %>"
+                        class="btn btn-sm bg-background border border-border hover:border-primary hover:text-primary hover:bg-primary/5 transition-all shadow-sm font-semibold px-4 rounded-lg">
                         Periksa
                       </a>
                     </td>
                   </tr>
-                <% }) %>
-              <% } else { %>
-                <tr>
-                  <td colspan="5" class="p-8 text-center text-muted-foreground font-medium">
-                    Belum ada riwayat transaksi agenda kerja lembur yang tercatat di database, Bos.
-                  </td>
-                </tr>
-              <% } %>
+                  <% }) %>
+                    <% } else { %>
+                      <tr>
+                        <td colspan="5" class="p-12 text-center">
+                          <div class="flex flex-col items-center justify-center gap-3 text-muted-foreground">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24"
+                              fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"
+                              stroke-linejoin="round" class="opacity-20">
+                              <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
+                              <line x1="16" x2="16" y1="2" y2="6" />
+                              <line x1="8" x2="8" y1="2" y2="6" />
+                              <line x1="3" x2="21" y1="10" y2="10" />
+                              <path d="m9 16 2 2 4-4" />
+                            </svg>
+                            <span class="font-medium">Belum ada riwayat transaksi agenda kerja lembur yang
+                              tercatat.</span>
+                          </div>
+                        </td>
+                      </tr>
+                      <% } %>
             </tbody>
           </table>
         </div>
       </div>
 
-      <div data-slot="card" class="rounded-xl border bg-card text-card-foreground shadow-xs p-6 border-dashed bg-muted/20">
-        <h2 class="text-sm font-bold mb-2 flex items-center gap-2">
-          Catatan Penting Untuk Anggota Tim:
-        </h2>
-        <p class="text-xs text-muted-foreground leading-relaxed">
-          Pastikan setiap pembuatan halaman modul fungsional baru ditaruh di dalam sub-folder <code class="bg-muted border px-1.5 py-0.5 rounded text-[11px] font-mono font-bold text-foreground">views/pegawai/</code> atau <code class="bg-muted border px-1.5 py-0.5 rounded text-[11px] font-mono font-bold text-foreground">views/admin/</code>. Jangan lupa untuk menyertakan partial eksternal <code class="bg-muted border px-1.5 py-0.5 rounded text-[11px] font-mono font-bold text-primary">&lt;%- include('../partials/sidebar') %&gt;</code> di baris layout paling atas agar kesatuan kendali navigasi dashboard kita tetap kokoh dan sinkron.
-        </p>
+      <div data-slot="card"
+        class="rounded-2xl border border-primary/20 bg-primary/5 text-card-foreground shadow-sm p-5 relative overflow-hidden group">
+        <div
+          class="absolute right-0 top-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -z-10 translate-x-1/2 -translate-y-1/2">
+        </div>
+        <div class="flex items-start gap-4">
+          <div class="p-2 bg-primary/10 rounded-xl text-primary mt-1 shadow-inner border border-primary/10">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 16v-4" />
+              <path d="M12 8h.01" />
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-sm font-bold mb-1.5 text-foreground">
+              Catatan Pengembang
+            </h2>
+            <p class="text-sm text-muted-foreground leading-relaxed">
+              Pastikan setiap pembuatan halaman modul fungsional baru ditaruh di dalam sub-folder <code
+                class="bg-background border border-border px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold text-foreground shadow-sm">views/pegawai/</code>
+              atau <code
+                class="bg-background border border-border px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold text-foreground shadow-sm">views/admin/</code>.
+              Sertakan partial eksternal <code
+                class="bg-background border border-primary/30 px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold text-primary shadow-sm">&lt;%- include('../partials/sidebar') %&gt;</code>
+              di baris layout paling atas agar kesatuan kendali navigasi dashboard tetap sinkron.
+            </p>
+          </div>
+        </div>
       </div>
     </main>
-  </body>
+</body>
+
 </html>

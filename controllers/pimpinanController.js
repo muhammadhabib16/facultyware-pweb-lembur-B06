@@ -66,7 +66,7 @@ exports.simpanPenugasan = async (req, res, next) => {
         request_number, title, description, request_date, 
         planned_start_time, planned_end_time, submitted_by, status,
         submitted_by_id, approved_by, approved_by_id, approved_at, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, 'approved', ?, ?, ?, NOW(), NOW(), NOW())`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, 'assigned', ?, ?, ?, NOW(), NOW(), NOW())`,
       [
         requestNumber,
         title,
@@ -319,6 +319,54 @@ exports.updatePenugasan = async (req, res, next) => {
   } catch (err) {
     await connection.rollback();
     console.error("updatePenugasan error:", err);
+    next(err);
+  } finally {
+    connection.release();
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FITUR 17: MENGHAPUS PENUGASAN (POST /pimpinan/penugasan/:id/delete)
+// ─────────────────────────────────────────────────────────────────────────────
+exports.hapusPenugasan = async (req, res, next) => {
+  const connection = await db.getConnection();
+  try {
+    const { id } = req.params;
+
+    await connection.beginTransaction();
+
+    // Pastikan status penugasan masih 'assigned' atau 'pending' dan benar-benar penugasan (REQ-ASSIGN)
+    const [[tugas]] = await connection.query(
+      "SELECT id, status FROM overtime_requests WHERE id = ? AND request_number LIKE 'REQ-ASSIGN-%'",
+      [id]
+    );
+
+    if (!tugas) {
+      await connection.rollback();
+      return res.status(404).render("error", { message: "Data penugasan tidak ditemukan." });
+    }
+
+    if (tugas.status !== 'assigned' && tugas.status !== 'pending') {
+      await connection.rollback();
+      return res.status(400).render("error", { message: "Penugasan tidak dapat dihapus karena sudah mulai diproses oleh pegawai." });
+    }
+
+    // Hapus dari pivot table dulu karena foreign key
+    await connection.query("DELETE FROM overtime_request_members WHERE overtime_request_id = ?", [id]);
+    
+    // Hapus dari tabel utama
+    await connection.query("DELETE FROM overtime_requests WHERE id = ?", [id]);
+
+    await connection.commit();
+
+    if (req.headers["hx-request"]) {
+      res.set("HX-Redirect", "/pimpinan/penugasan");
+      return res.sendStatus(204);
+    }
+    res.redirect("/pimpinan/penugasan?toast=hapus_berhasil");
+  } catch (err) {
+    await connection.rollback();
+    console.error("hapusPenugasan error:", err);
     next(err);
   } finally {
     connection.release();

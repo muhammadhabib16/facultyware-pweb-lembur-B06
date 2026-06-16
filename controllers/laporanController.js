@@ -10,11 +10,11 @@ exports.listLaporan = async (req, res) => {
     const limit = 10;
     const offset = (page - 1) * limit;
 
-    // Hanya tampilkan overtime_requests yang sudah 'completed' (laporan sudah diisi)
-    let whereClause = `WHERE or2.status IN ('completed', 'approved', 'rejected')`;
+    // Hanya tampilkan overtime_requests yang sudah 'waiting_approval' (laporan sudah diisi)
+    let whereClause = `WHERE or2.status IN ('waiting_approval', 'approved', 'rejected')`;
     const params = [];
 
-    if (status && ["completed", "approved", "rejected"].includes(status)) {
+    if (status && ["waiting_approval", "approved", "rejected"].includes(status)) {
       whereClause += ` AND or2.status = ?`;
       params.push(status);
     }
@@ -102,7 +102,7 @@ exports.detailLaporan = async (req, res) => {
        LEFT JOIN organization_units ou ON ou.id = submitter.organization_unit_id
        LEFT JOIN employees approver ON approver.id = or2.approved_by
        WHERE or2.id = ?
-         AND or2.status IN ('completed', 'approved', 'rejected')`,
+         AND or2.status IN ('waiting_approval', 'approved', 'rejected')`,
       [id],
     );
 
@@ -166,9 +166,9 @@ exports.konfirmasiLaporan = async (req, res) => {
 
     await connection.beginTransaction();
 
-    // Validasi: laporan harus dalam status 'completed' agar bisa dikonfirmasi
+    // Validasi: laporan harus dalam status 'waiting_approval' agar bisa dikonfirmasi
     const [[laporan]] = await connection.query(
-      `SELECT id, status, submitted_by FROM overtime_requests WHERE id = ? AND status = 'completed'`,
+      `SELECT id, status, submitted_by FROM overtime_requests WHERE id = ? AND status = 'waiting_approval'`,
       [id],
     );
 
@@ -176,7 +176,7 @@ exports.konfirmasiLaporan = async (req, res) => {
       await connection.rollback();
       return res.status(400).json({
         success: false,
-        message: 'Laporan tidak ditemukan atau statusnya bukan "completed".',
+        message: 'Laporan tidak ditemukan atau statusnya bukan "waiting_approval".',
       });
     }
 
@@ -237,7 +237,7 @@ exports.tolakLaporan = async (req, res) => {
 
     // Validasi status
     const [[laporan]] = await connection.query(
-      `SELECT id, status, submitted_by FROM overtime_requests WHERE id = ? AND status = 'completed'`,
+      `SELECT id, status, submitted_by FROM overtime_requests WHERE id = ? AND status = 'waiting_approval'`,
       [id],
     );
 
@@ -245,7 +245,7 @@ exports.tolakLaporan = async (req, res) => {
       await connection.rollback();
       return res.status(400).json({
         success: false,
-        message: 'Laporan tidak ditemukan atau statusnya bukan "completed".',
+        message: 'Laporan tidak ditemukan atau statusnya bukan "waiting_approval".',
       });
     }
 

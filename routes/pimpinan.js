@@ -76,4 +76,11 @@ router.post(
   pimpinanController.updatePenugasan,
 );
 
+// ── Fitur 17: Pimpinan membatalkan/menghapus penugasan ──
+router.post(
+  "/penugasan/:id/delete",
+  checkPermission("delete_overtime_assignments"),
+  pimpinanController.hapusPenugasan,
+);
+
 module.exports = router;
