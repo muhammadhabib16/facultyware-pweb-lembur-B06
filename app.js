@@ -56,6 +56,7 @@ app.use("/", indexRouter);
 app.use("/users", usersRouter);
 app.use("/pimpinan", pimpinanRouter);
 app.use("/pegawai", pegawaiRouter);
+app.use("/api/pegawai", require("./routes/api"));
 app.use('/admin', require('./routes/admin'));
 
 // catch 404 and forward to error handler

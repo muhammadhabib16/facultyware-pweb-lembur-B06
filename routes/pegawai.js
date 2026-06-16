@@ -13,10 +13,14 @@ router.post("/permohonan", pegawaiController.simpanPermohonan);
 // Fitur 3: Batal permohonan mandiri (sebelum dilaporkan)
 router.post("/permohonan/:id/batal", pegawaiController.batalPermohonan);
 
-// Fitur 5 & 7: Daftar tugas aktif (dari pimpinan atau permohonan sendiri yang belum selesai)
-router.get("/tugas", pegawaiController.listTugasAktif);
+// Fitur 1 & 3 & 4: Daftar & Pencarian Tugas Lembur
+router.get("/tugas", pegawaiController.listTugas);
 
-// Fitur 6: Detail tugas
+// Fitur Export PDF & Excel
+router.get("/tugas/export/pdf", pegawaiController.exportPdf);
+router.get("/tugas/export/excel", pegawaiController.exportExcel);
+
+// Fitur 2: Detail tugas
 router.get("/tugas/:id", pegawaiController.detailTugas);
 
 // Fitur 2: Pelaporan kerja aktual
