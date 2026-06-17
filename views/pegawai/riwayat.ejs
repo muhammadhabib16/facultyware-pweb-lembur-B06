@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/assets/styles.css">
+</head>
+<body class="bg-background flex min-h-screen">
+
+  <%- include('../partials/sidebar') %>
+
+  <main class="flex-1 p-8">
+
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-3xl font-bold">Riwayat Lembur</h1>
+        <p class="text-muted-foreground">
+          Daftar pengajuan lembur yang pernah dibuat.
+        </p>
+      </div>
+
+      <a
+        href="/pegawai/export/pdf"
+        class="btn btn-primary"
+      >
+        Export PDF
+      </a>
+    </div>
+
+    <div class="card p-6">
+    <table class="w-full">
+        <thead>
+        <tr class="border-b">
+            <th class="text-left py-3 w-16">No</th>
+            <th class="text-left py-3 w-72">Nomor Request</th>
+            <th class="text-left py-3">Agenda Lembur</th>
+            <th class="text-left py-3 w-32">Status</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        <% riwayat.forEach((item, index) => { %>
+        <tr class="border-b">
+            <td class="py-3"><%= index + 1 %></td>
+
+            <td class="py-3 font-mono text-sm">
+            <%= item.request_number %>
+            </td>
+
+            <td class="py-3">
+            <%= item.title %>
+            </td>
+
+            <td class="py-3">
+            <% if(item.status === 'pending'){ %>
+                <span class="px-2 py-1 rounded bg-yellow-500 text-black">
+                Pending
+                </span>
+            <% } else if(item.status === 'completed'){ %>
+                <span class="px-2 py-1 rounded bg-green-600 text-white">
+                Completed
+                </span>
+            <% } else { %>
+                <span class="px-2 py-1 rounded bg-gray-600 text-white">
+                <%= item.status %>
+                </span>
+            <% } %>
+            </td>
+        </tr>
+        <% }) %>
+        </tbody>
+    </table>
+    </div>
+
+  </main>
+</body>
+</html>

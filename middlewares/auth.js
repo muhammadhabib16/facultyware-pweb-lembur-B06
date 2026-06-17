@@ -33,6 +33,11 @@ async function isAuthenticated(req, res, next) {
       };
     }
 
+  // middlewares/auth.js
+  req.user = {
+    employee_id: 4
+  };
+
     next(); // Lolos validasi, lanjutkan ke middleware/controller berikutnya
   } catch (error) {
     console.error("Error pada middleware isAuthenticated:", error);
