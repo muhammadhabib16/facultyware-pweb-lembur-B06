@@ -15,11 +15,39 @@ router.get(
   laporanController.listLaporan,
 );
 
+// ── Fitur Baru: REST API Statistik Laporan ───────────────────────────────────
+router.get(
+  "/laporan/statistik",
+  checkPermission("view_overtime_reports"),
+  laporanController.apiStatistikLaporan,
+);
+
+// ── Fitur Baru: Ekspor Rekap Laporan ke PDF (filter bulan opsional) ──────────
+router.get(
+  "/laporan/ekspor/pdf",
+  checkPermission("view_overtime_reports"),
+  laporanController.eksporPDF,
+);
+
 // ── Fitur 14: Detail laporan lembur ──────────────────────────────────────────
 router.get(
   "/laporan/:id",
   checkPermission("view_overtime_reports"),
   laporanController.detailLaporan,
+);
+
+// ── Fitur Baru: Ekspor Detail Laporan ke PDF ─────────────────────────────────
+router.get(
+  "/laporan/:id/ekspor/pdf",
+  checkPermission("view_overtime_reports"),
+  laporanController.eksporDetailPDF,
+);
+
+// ── Fitur Baru: Ekspor Detail Laporan ke DOCX ────────────────────────────────
+router.get(
+  "/laporan/:id/ekspor/docx",
+  checkPermission("view_overtime_reports"),
+  laporanController.eksporDetailDOCX,
 );
 
 // -- Penugasan Lembur
