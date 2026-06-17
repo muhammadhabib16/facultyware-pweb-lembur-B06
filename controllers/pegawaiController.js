@@ -90,8 +90,31 @@ exports.simpanPermohonan = async (req, res, next) => {
 
     const approvedById = pimpinans[0].id;
 
-    // Generate nomor permohonan lembur unik, contoh: REQ-LEMBUR-1783940294
-    const requestNumber = `REQ-LEMBUR-${Date.now()}`;
+    // Generate nomor permohonan lembur unik
+    const [lastRequest] = await db.query(`
+      SELECT request_number
+      FROM overtime_requests
+      ORDER BY id DESC
+      LIMIT 1
+    `);
+
+    let nextNumber = 1;
+
+    if (
+      lastRequest.length > 0 &&
+      lastRequest[0].request_number
+    ) {
+      const lastNum = parseInt(
+        lastRequest[0].request_number.split("-").pop()
+      );
+
+      if (!isNaN(lastNum)) {
+        nextNumber = lastNum + 1;
+      }
+    }
+
+    const requestNumber =
+      `REQ-LEMBUR-${String(nextNumber).padStart(3, "0")}`;
 
     // 1. Simpan ke tabel induk 'overtime_requests'
     const [result] = await connection.query(
@@ -169,6 +192,7 @@ exports.simpanPermohonan = async (req, res, next) => {
   }
 };
 
+<<<<<<< HEAD
 // ─────────────────────────────────────────────────────────────────────────────
 // FITUR 5 & 7: MELIHAT DAFTAR TUGAS AKTIF (GET /pegawai/tugas)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -739,5 +763,197 @@ exports.apiCariTugas = async (req, res) => {
       status: "error",
       message: err.message
     });
+  }
+};
+
+// GET /pegawai/api/riwayat
+exports.apiRiwayatLembur = async (req, res) => {
+  try {
+    const employeeId = await getEmployeeId(req);
+
+    if (!employeeId) {
+      return res.status(400).json({
+        status: "error",
+        message: "Profil pegawai belum terhubung dengan akun."
+      });
+    }
+
+    const [riwayat] = await db.query(
+      `
+      SELECT
+        request_number,
+        title,
+        description,
+        request_date,
+        planned_start_time,
+        planned_end_time,
+        status,
+        created_at
+      FROM overtime_requests
+      WHERE submitted_by_id = ?
+      ORDER BY created_at DESC
+      `,
+      [employeeId]
+    );
+
+    return res.status(200).json({
+      status: "success",
+      total_data: riwayat.length,
+      data: riwayat
+    });
+  } catch (err) {
+    console.error("apiRiwayatLembur error:", err);
+
+    return res.status(500).json({
+      status: "error",
+      message: "Terjadi kesalahan saat mengambil data riwayat lembur.",
+      detail: err.message
+    });
+  }
+};
+
+const PDFDocument = require("pdfkit");
+
+exports.exportPdfRiwayat = async (req, res) => {
+  
+  try {
+
+    console.log("USER PDF:", req.user);
+    console.log("SESSION USER:", req.user);
+
+    const employeeId = await getEmployeeId(req);
+
+    const [pegawai] = await db.query(
+      "SELECT name FROM employees WHERE id = ?",
+      [employeeId]
+    );
+
+    const namaPegawai =
+      pegawai.length > 0
+        ? pegawai[0].name
+        : "Tidak Diketahui";
+
+        if (!employeeId) {
+          return res.status(400).send("Profil pegawai belum tersedia.");
+    }
+
+    const [riwayat] = await db.query(
+      `
+      SELECT
+        request_number,
+        title,
+        request_date,
+        status,
+        created_at
+      FROM overtime_requests
+      WHERE submitted_by_id = ?
+      ORDER BY created_at DESC
+      `,
+      [employeeId]
+    );
+
+
+
+    const doc = new PDFDocument({
+      margin: 40,
+      size: "A4",
+    });
+
+    const filename = `riwayat-lembur-${Date.now()}.pdf`;
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${filename}"`
+    );
+
+    doc.pipe(res);
+
+    // Judul
+    doc
+      .fontSize(20)
+      .font("Helvetica-Bold")
+      .text("LAPORAN RIWAYAT LEMBUR PEGAWAI", {
+        align: "center",
+      });
+
+    doc.moveDown(1.5);
+
+    doc
+      .fontSize(11)
+      .font("Helvetica")
+      .text(`Nama Pegawai : ${namaPegawai}`);
+
+    doc.text(
+      `Tanggal Cetak : ${new Date().toLocaleDateString("id-ID")}`
+    );
+
+    doc.moveDown();
+
+    doc.moveTo(50, doc.y)
+      .lineTo(550, doc.y)
+      .stroke();
+
+    let y = doc.y + 20;
+
+    // Header tabel
+    doc.fontSize(10).font("Helvetica-Bold");
+
+    doc.text("No", 50, y);
+    doc.text("Nomor Request", 80, y);
+    doc.text("Agenda Lembur", 220, y);
+    doc.text("Status", 470, y);
+
+    y += 15;
+
+    doc.moveTo(50, y)
+      .lineTo(550, y)
+      .stroke();
+
+    y += 10;
+
+    doc.moveDown();
+
+doc.fontSize(10).font("Helvetica");
+
+riwayat.forEach((item, index) => {
+  doc.text(String(index + 1), 50, y);
+
+  doc.text(
+    item.request_number || "-",
+    80,
+    y,
+    {
+      width: 120
+    }
+  );
+
+  doc.text(
+    item.title || "-",
+    220,
+    y,
+    {
+      width: 220
+    }
+  );
+
+  doc.text(
+    (item.status || "-").toUpperCase(),
+    470,
+    y,
+    {
+      width: 70
+    }
+  );
+
+  y += 25;
+});
+
+    doc.end();
+
+  } catch (err) {
+    console.error("exportPdfRiwayat error:", err);
+
+    res.status(500).send("Gagal membuat PDF");
   }
 };

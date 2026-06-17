@@ -1,12 +1,13 @@
 const express = require("express");
 const router = express.Router();
+
 const { isAuthenticated } = require("../middlewares/auth");
 const pegawaiController = require("../controllers/pegawaiController");
 
-// Seluruh rute pegawai memerlukan login terlebih dahulu
+// Semua route pegawai wajib login
 router.use(isAuthenticated);
 
-// Rute untuk Fitur 1 (Pengajuan Permohonan Lembur Mandiri)
+// Form Permohonan Lembur
 router.get("/permohonan", pegawaiController.formPermohonan);
 router.post("/permohonan", pegawaiController.simpanPermohonan);
 
@@ -29,5 +30,13 @@ router.post("/tugas/:id/lapor", pegawaiController.submitLaporan);
 
 // Fitur 4 & 8: Riwayat lembur (status waiting_approval, approved, rejected)
 router.get("/riwayat", pegawaiController.riwayatLembur);
+
+// REST API Riwayat Lembur
+router.get("/api/riwayat", pegawaiController.apiRiwayatLembur);
+
+router.get(
+  "/export/pdf",
+  pegawaiController.exportPdfRiwayat
+);
 
 module.exports = router;
