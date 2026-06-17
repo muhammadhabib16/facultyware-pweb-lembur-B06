@@ -9,4 +9,7 @@ router.use(isAuthenticated);
 // REST API for employee task search
 router.get("/tugas/search", pegawaiController.apiCariTugas);
 
+// REST API for employee overtime history
+router.get("/riwayat", pegawaiController.apiRiwayatLembur);
+
 module.exports = router;

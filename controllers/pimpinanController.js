@@ -385,3 +385,28 @@ exports.hapusPenugasan = async (req, res, next) => {
     connection.release();
   }
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// REST API (GET /api/pimpinan/penugasan/status) (Habib)
+// ─────────────────────────────────────────────────────────────────────────────
+exports.apiStatusPenugasan = async (req, res) => {
+  try {
+    const pimpinanId = req.user.employee_id;
+    const [penugasan] = await db.query(
+      `SELECT or2.request_number, or2.title, or2.status, e.name as ditugaskan_kepada
+       FROM overtime_requests or2
+       JOIN overtime_request_members orm ON orm.overtime_request_id = or2.id
+       JOIN employees e ON orm.employee_id = e.id
+       WHERE or2.approved_by_id = ? AND or2.request_number LIKE 'REQ-ASSIGN-%'`,
+      [pimpinanId]
+    );
+
+    res.json({
+      status: "success",
+      pimpinan_id: pimpinanId,
+      data: penugasan
+    });
+  } catch (err) {
+    res.status(500).json({ status: "error", message: err.message });
+  }
+};

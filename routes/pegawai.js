@@ -31,9 +31,6 @@ router.post("/tugas/:id/lapor", pegawaiController.submitLaporan);
 // Fitur 4 & 8: Riwayat lembur (status waiting_approval, approved, rejected)
 router.get("/riwayat", pegawaiController.riwayatLembur);
 
-// REST API Riwayat Lembur
-router.get("/api/riwayat", pegawaiController.apiRiwayatLembur);
-
 router.get(
   "/export/pdf",
   pegawaiController.exportPdfRiwayat
