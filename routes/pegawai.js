@@ -3,31 +3,38 @@ const router = express.Router();
 const { isAuthenticated } = require("../middlewares/auth");
 const pegawaiController = require("../controllers/pegawaiController");
 
-// Seluruh rute pegawai memerlukan login terlebih dahulu
+// Semua route pegawai wajib login
 router.use(isAuthenticated);
 
-// Rute untuk Fitur 1 (Pengajuan Permohonan Lembur Mandiri)
+// =====================================================
+// PERMOHONAN LEMBUR MANDIRI
+// =====================================================
 router.get("/permohonan", pegawaiController.formPermohonan);
 router.post("/permohonan", pegawaiController.simpanPermohonan);
 
-// Fitur 3: Batal permohonan mandiri (sebelum dilaporkan)
+// Batal permohonan
 router.post("/permohonan/:id/batal", pegawaiController.batalPermohonan);
 
-// Fitur 1 & 3 & 4: Daftar & Pencarian Tugas Lembur
+// =====================================================
+// DAFTAR TUGAS LEMBUR
+// =====================================================
 router.get("/tugas", pegawaiController.listTugas);
 
-// Fitur Export PDF & Excel
-router.get("/tugas/export/pdf", pegawaiController.exportPdf);
-router.get("/tugas/export/excel", pegawaiController.exportExcel);
-
-// Fitur 2: Detail tugas
+// Detail tugas lembur
 router.get("/tugas/:id", pegawaiController.detailTugas);
 
-// Fitur 2: Pelaporan kerja aktual
+// Export PDF daftar tugas
+router.get("/tugas/export/pdf", pegawaiController.exportPdf);
+
+// =====================================================
+// LAPORAN LEMBUR
+// =====================================================
 router.get("/tugas/:id/lapor", pegawaiController.formLaporan);
 router.post("/tugas/:id/lapor", pegawaiController.submitLaporan);
 
-// Fitur 4 & 8: Riwayat lembur (status waiting_approval, approved, rejected)
+// =====================================================
+// RIWAYAT LEMBUR
+// =====================================================
 router.get("/riwayat", pegawaiController.riwayatLembur);
 
 module.exports = router;

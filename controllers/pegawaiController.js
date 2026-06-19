@@ -219,6 +219,7 @@ exports.listTugasAktif = async (req, res, next) => {
 // ─────────────────────────────────────────────────────────────────────────────
 exports.detailTugas = async (req, res, next) => {
   try {
+    console.log("DETAIL TUGAS ID:", req.params.id);
     const employeeId = await getEmployeeId(req);
     const { id } = req.params;
 
@@ -244,33 +245,40 @@ exports.detailTugas = async (req, res, next) => {
       });
     }
 
-    const tugas = tugasRows[0];
+const tugas = tugasRows[0];
 
-    // 2. Ambil daftar anggota lengkap yang tergabung dalam penugasan lembur tersebut
-    const [members] = await db.query(
-      `
-      SELECT 
-        e.name AS employee_name,
-        e.employee_number,
-        orm.role,
-        orm.job_desc,
-        orm.planned_hours
-      FROM overtime_request_members orm
-      JOIN employees e ON orm.employee_id = e.id
-      WHERE orm.overtime_request_id = ?
-    `,
-      [id]
-    );
+console.log("=== DATA TUGAS ===");
+console.log(tugas);
 
-    res.render("pegawai/detail_tugas", {
-      title: `Detail Tugas — ${tugas.request_number}`,
-      tugas,
-      members,
-    });
-  } catch (err) {
-    console.error("detailTugas error:", err);
-    next(err);
-  }
+const [members] = await db.query(
+  `
+  SELECT
+    e.name AS employee_name,
+    e.employee_number,
+    orm.role,
+    orm.job_desc,
+    orm.planned_hours
+  FROM overtime_request_members orm
+  JOIN employees e ON orm.employee_id = e.id
+  WHERE orm.overtime_request_id = ?
+`,
+  [id]
+);
+
+console.log("=== DATA MEMBERS ===");
+console.log(members);
+
+res.render("pegawai/detail_tugas", {
+  title: `Detail Tugas — ${tugas.request_number}`,
+  tugas,
+  members,
+});
+} catch (err) {
+  console.error("DETAIL TUGAS ERROR:");
+  console.error(err);
+  console.error(err.stack);
+  next(err);
+}
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -543,8 +551,11 @@ exports.exportPdf = async (req, res, next) => {
     const PDFDocument = require("pdfkit");
     const doc = new PDFDocument({ margin: 50 });
 
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `attachment; filename="Daftar_Tugas_Lembur_${Date.now()}.pdf"`);
+    res.writeHead(200, {
+  "Content-Type": "application/pdf",
+  "Content-Disposition": `attachment; filename="Daftar_Tugas_Lembur_${Date.now()}.pdf"`
+});
+
     doc.pipe(res);
 
     // Title
@@ -554,17 +565,15 @@ exports.exportPdf = async (req, res, next) => {
 
     // Table Columns Setup
     const tableTop = 130;
-    const colPositions = [50, 180, 350, 470];
+    const colPositions = [60, 300];
 
     // Table Header Background
-    doc.fillColor("#f3f4f6").rect(50, tableTop - 5, 500, 22).fill();
+    doc.fillColor("#f3f4f6").rect(50, tableTop - 5, 520, 22).fill();
     
     // Table Header Text
     doc.fillColor("#1f2937").fontSize(10).font("Helvetica-Bold");
-    doc.text("No. Permintaan", colPositions[0], tableTop);
-    doc.text("Judul Agenda", colPositions[1], tableTop);
-    doc.text("Tanggal", colPositions[2], tableTop);
-    doc.text("Status", colPositions[3], tableTop);
+    doc.text("Nomor Permintaan", colPositions[0], tableTop);
+    doc.text("Agenda Lembur", colPositions[1], tableTop);
 
     // Header Line
     doc.moveTo(50, tableTop + 17).lineTo(550, tableTop + 17).strokeColor("#e5e7eb").stroke();
@@ -594,10 +603,13 @@ exports.exportPdf = async (req, res, next) => {
         year: "numeric"
       });
 
-      doc.text(row.request_number, colPositions[0], y);
-      doc.text(row.title, colPositions[1], y, { width: 160 });
-      doc.text(formattedDate, colPositions[2], y);
-      doc.text(row.status.toUpperCase(), colPositions[3], y);
+      doc.text(row.request_number, colPositions[0], y, {
+        width: 220
+      });
+
+      doc.text(row.title, colPositions[1], y, {
+        width: 220
+      });
 
       // Row separator
       doc.moveTo(50, y + 18).lineTo(550, y + 18).strokeColor("#f3f4f6").stroke();
@@ -607,87 +619,6 @@ exports.exportPdf = async (req, res, next) => {
     doc.end();
   } catch (err) {
     console.error("exportPdf error:", err);
-    next(err);
-  }
-};
-
-// ─────────────────────────────────────────────────────────────────────────────
-// FITUR 6: EXPORT EXCEL (GET /pegawai/tugas/export/excel)
-// ─────────────────────────────────────────────────────────────────────────────
-exports.exportExcel = async (req, res, next) => {
-  try {
-    const employeeId = await getEmployeeId(req);
-    if (!employeeId) {
-      return res.status(400).send("Profil pegawai belum disiapkan.");
-    }
-
-    const keyword = req.query.keyword || "";
-    let query = `
-      SELECT 
-        or2.request_number,
-        or2.title,
-        or2.request_date,
-        or2.status
-      FROM overtime_requests or2
-      JOIN overtime_request_members orm ON or2.id = orm.overtime_request_id
-      WHERE orm.employee_id = ?
-    `;
-    const params = [employeeId];
-
-    if (keyword) {
-      query += ` AND (or2.request_number LIKE ? OR or2.title LIKE ?)`;
-      params.push(`%${keyword}%`, `%${keyword}%`);
-    }
-
-    query += ` ORDER BY or2.request_date DESC, or2.id DESC`;
-
-    const [rows] = await db.query(query, params);
-
-    const excel = require("exceljs");
-    const workbook = new excel.Workbook();
-    const worksheet = workbook.addWorksheet("Tugas Lembur");
-
-    // Columns setup
-    worksheet.columns = [
-      { header: "Nomor Permintaan", key: "request_number", width: 25 },
-      { header: "Judul Agenda", key: "title", width: 40 },
-      { header: "Tanggal", key: "request_date", width: 15 },
-      { header: "Status", key: "status", width: 15 }
-    ];
-
-    // Styling headers
-    const headerRow = worksheet.getRow(1);
-    headerRow.font = { bold: true, color: { argb: "FFFFFF" } };
-    headerRow.fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "4F46E5" } // Indigo background
-    };
-
-    // Add rows
-    for (const row of rows) {
-      const formattedDate = new Date(row.request_date).toLocaleDateString("id-ID", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric"
-      });
-
-      worksheet.addRow({
-        request_number: row.request_number,
-        title: row.title,
-        request_date: formattedDate,
-        status: row.status
-      });
-    }
-
-    // Set Response Headers
-    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-    res.setHeader("Content-Disposition", `attachment; filename="Daftar_Tugas_Lembur_${Date.now()}.xlsx"`);
-
-    await workbook.xlsx.write(res);
-    res.end();
-  } catch (err) {
-    console.error("exportExcel error:", err);
     next(err);
   }
 };
