@@ -116,14 +116,15 @@ exports.exportExcel = async (req, res, next) => {
 // 3. Endpoint REST API Rekap Lembur (Tugas Darrel)
 exports.apiRekapLembur = async (req, res) => {
   try {
-    const { start_date, end_date } = req.query;
+    const { start_date, end_date, unit_id } = req.query;
     
     // Query dasar
     let query = `
-      SELECT or2.request_number, or2.title, e.name as pegawai, or2.status
+      SELECT or2.request_number, or2.title, e.name as pegawai, ou.name as unit_name, or2.status
       FROM overtime_requests or2
       LEFT JOIN employees e ON or2.submitted_by = e.id
-      WHERE 1=1
+      LEFT JOIN organization_units ou ON e.organization_unit_id = ou.id
+      WHERE or2.request_number LIKE 'REQ-ASSIGN-%'
     `;
     let params = [];
 
@@ -131,6 +132,12 @@ exports.apiRekapLembur = async (req, res) => {
     if (start_date && end_date) {
       query += " AND DATE(or2.request_date) BETWEEN ? AND ?";
       params.push(start_date, end_date);
+    }
+
+    // Jika parameter filter divisi diberikan di URL
+    if (unit_id) {
+      query += " AND e.organization_unit_id = ?";
+      params.push(unit_id);
     }
 
     const [dataRekap] = await db.query(query, params);

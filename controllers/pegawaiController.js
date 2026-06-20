@@ -752,17 +752,18 @@ exports.apiRiwayatLembur = async (req, res) => {
     const [riwayat] = await db.query(
       `
       SELECT
-        request_number,
-        title,
-        description,
-        request_date,
-        planned_start_time,
-        planned_end_time,
-        status,
-        created_at
-      FROM overtime_requests
-      WHERE submitted_by_id = ?
-      ORDER BY created_at DESC
+        or2.request_number,
+        or2.title,
+        or2.description,
+        or2.request_date,
+        or2.planned_start_time,
+        or2.planned_end_time,
+        or2.status,
+        or2.created_at
+      FROM overtime_requests or2
+      JOIN overtime_request_members orm ON orm.overtime_request_id = or2.id
+      WHERE orm.employee_id = ? AND or2.status IN ('waiting_approval', 'approved', 'rejected')
+      ORDER BY or2.updated_at DESC
       `,
       [employeeId],
     );
