@@ -4,7 +4,9 @@ const db = require("../lib/db");
 async function getEmployeeId(req) {
   const userId = req.session.userId;
   if (!userId) return null;
-  const [rows] = await db.query("SELECT id FROM employees WHERE id = ?", [userId]);
+  const [rows] = await db.query("SELECT id FROM employees WHERE id = ?", [
+    userId,
+  ]);
   return rows.length > 0 ? rows[0].id : null;
 }
 
@@ -34,14 +36,15 @@ exports.simpanPermohonan = async (req, res, next) => {
       planned_start_time,
       planned_end_time,
     } = req.body;
-    
+
     const employeeId = await getEmployeeId(req);
 
     // Proteksi jika profile pegawai belum disiapkan
     if (!employeeId) {
       return res.render("pegawai/permohonan", {
         title: "Ajukan Permohonan Lembur Mandiri",
-        error: "Profil pegawai Anda belum disiapkan di database. Silakan hubungi admin.",
+        error:
+          "Profil pegawai Anda belum disiapkan di database. Silakan hubungi admin.",
         success: null,
       });
     }
@@ -80,7 +83,7 @@ exports.simpanPermohonan = async (req, res, next) => {
        JOIN model_has_roles mhr ON e.id = mhr.model_id
        JOIN roles r ON mhr.role_id = r.id
        WHERE r.name = 'pimpinan' AND mhr.model_type = 'User'
-       LIMIT 1`
+       LIMIT 1`,
     );
 
     // Aturan 5 & 6: Jangan menggunakan nilai fallback 0. Jika pimpinan tidak ditemukan, rollback dan gagalkan.
@@ -100,21 +103,15 @@ exports.simpanPermohonan = async (req, res, next) => {
 
     let nextNumber = 1;
 
-    if (
-      lastRequest.length > 0 &&
-      lastRequest[0].request_number
-    ) {
-      const lastNum = parseInt(
-        lastRequest[0].request_number.split("-").pop()
-      );
+    if (lastRequest.length > 0 && lastRequest[0].request_number) {
+      const lastNum = parseInt(lastRequest[0].request_number.split("-").pop());
 
       if (!isNaN(lastNum)) {
         nextNumber = lastNum + 1;
       }
     }
 
-    const requestNumber =
-      `REQ-LEMBUR-${String(nextNumber).padStart(3, "0")}`;
+    const requestNumber = `REQ-LEMBUR-${String(nextNumber).padStart(3, "0")}`;
 
     // 1. Simpan ke tabel induk 'overtime_requests'
     const [result] = await connection.query(
@@ -130,11 +127,11 @@ exports.simpanPermohonan = async (req, res, next) => {
         request_date,
         planned_start_time,
         planned_end_time,
-        employeeId,    // submitted_by (int FK ke employees)
-        employeeId,    // submitted_by_id (int FK ke employees)
-        approvedById,  // approved_by (int FK ke employees — pimpinan)
-        approvedById,  // approved_by_id
-      ]
+        employeeId, // submitted_by (int FK ke employees)
+        employeeId, // submitted_by_id (int FK ke employees)
+        approvedById, // approved_by (int FK ke employees — pimpinan)
+        approvedById, // approved_by_id
+      ],
     );
 
     const newRequestId = result.insertId;
@@ -150,7 +147,7 @@ exports.simpanPermohonan = async (req, res, next) => {
         plannedHours,
         planned_start_time,
         planned_end_time,
-      ]
+      ],
     );
 
     // Commit transaksi setelah semua operasi database sukses
@@ -181,7 +178,8 @@ exports.simpanPermohonan = async (req, res, next) => {
     if (err.message === "PIMPINAN_NOT_FOUND") {
       return res.render("pegawai/permohonan", {
         title: "Ajukan Permohonan Lembur Mandiri",
-        error: "Pengajuan gagal: Tidak ada data Pimpinan aktif yang terdaftar di sistem untuk memverifikasi permohonan Anda.",
+        error:
+          "Pengajuan gagal: Tidak ada data Pimpinan aktif yang terdaftar di sistem untuk memverifikasi permohonan Anda.",
         success: null,
       });
     }
@@ -192,7 +190,6 @@ exports.simpanPermohonan = async (req, res, next) => {
   }
 };
 
-<<<<<<< HEAD
 // ─────────────────────────────────────────────────────────────────────────────
 // FITUR 5 & 7: MELIHAT DAFTAR TUGAS AKTIF (GET /pegawai/tugas)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -243,6 +240,7 @@ exports.listTugasAktif = async (req, res, next) => {
 // ─────────────────────────────────────────────────────────────────────────────
 exports.detailTugas = async (req, res, next) => {
   try {
+    console.log("DETAIL TUGAS ID:", req.params.id);
     const employeeId = await getEmployeeId(req);
     const { id } = req.params;
 
@@ -257,34 +255,39 @@ exports.detailTugas = async (req, res, next) => {
       LEFT JOIN employees pimpinan ON or2.approved_by_id = pimpinan.id
       WHERE or2.id = ? AND orm.employee_id = ?
     `,
-      [id, employeeId]
+      [id, employeeId],
     );
 
     // Proteksi akses: jika tugas tidak ditemukan atau pegawai bukan anggota dari tugas tersebut
     if (tugasRows.length === 0) {
-      return res.status(403).render("error", { 
+      return res.status(403).render("error", {
         message: "Forbidden: Anda tidak memiliki akses ke detail tugas ini.",
-        error: { status: 403, stack: "" }
+        error: { status: 403, stack: "" },
       });
     }
 
     const tugas = tugasRows[0];
 
-    // 2. Ambil daftar anggota lengkap yang tergabung dalam penugasan lembur tersebut
+    console.log("=== DATA TUGAS ===");
+    console.log(tugas);
+
     const [members] = await db.query(
       `
-      SELECT 
-        e.name AS employee_name,
-        e.employee_number,
-        orm.role,
-        orm.job_desc,
-        orm.planned_hours
-      FROM overtime_request_members orm
-      JOIN employees e ON orm.employee_id = e.id
-      WHERE orm.overtime_request_id = ?
-    `,
-      [id]
+  SELECT
+    e.name AS employee_name,
+    e.employee_number,
+    orm.role,
+    orm.job_desc,
+    orm.planned_hours
+  FROM overtime_request_members orm
+  JOIN employees e ON orm.employee_id = e.id
+  WHERE orm.overtime_request_id = ?
+`,
+      [id],
     );
+
+    console.log("=== DATA MEMBERS ===");
+    console.log(members);
 
     res.render("pegawai/detail_tugas", {
       title: `Detail Tugas — ${tugas.request_number}`,
@@ -292,7 +295,9 @@ exports.detailTugas = async (req, res, next) => {
       members,
     });
   } catch (err) {
-    console.error("detailTugas error:", err);
+    console.error("DETAIL TUGAS ERROR:");
+    console.error(err);
+    console.error(err.stack);
     next(err);
   }
 };
@@ -311,15 +316,21 @@ exports.batalPermohonan = async (req, res, next) => {
     // Pastikan pengajuan milik pegawai ini dan masih 'pending'
     const [[tugas]] = await connection.query(
       "SELECT id, status FROM overtime_requests WHERE id = ? AND submitted_by = ? AND status = 'pending'",
-      [id, employeeId]
+      [id, employeeId],
     );
 
     if (!tugas) {
       await connection.rollback();
-      return res.status(400).render("error", { message: "Permohonan tidak dapat dibatalkan (mungkin sudah diproses atau bukan milik Anda)." });
+      return res.status(400).render("error", {
+        message:
+          "Permohonan tidak dapat dibatalkan (mungkin sudah diproses atau bukan milik Anda).",
+      });
     }
 
-    await connection.query("DELETE FROM overtime_request_members WHERE overtime_request_id = ?", [id]);
+    await connection.query(
+      "DELETE FROM overtime_request_members WHERE overtime_request_id = ?",
+      [id],
+    );
     await connection.query("DELETE FROM overtime_requests WHERE id = ?", [id]);
 
     await connection.commit();
@@ -350,17 +361,19 @@ exports.formLaporan = async (req, res, next) => {
       `SELECT or2.* FROM overtime_requests or2
        JOIN overtime_request_members orm ON orm.overtime_request_id = or2.id
        WHERE or2.id = ? AND orm.employee_id = ? AND or2.status IN ('assigned', 'pending')`,
-      [id, employeeId]
+      [id, employeeId],
     );
 
     if (!tugas) {
-      return res.status(404).render("error", { message: "Tugas tidak ditemukan atau tidak valid untuk dilaporkan." });
+      return res.status(404).render("error", {
+        message: "Tugas tidak ditemukan atau tidak valid untuk dilaporkan.",
+      });
     }
 
     res.render("pegawai/form_laporan", {
       title: "Isi Laporan Pelaksanaan",
       tugas,
-      error: null
+      error: null,
     });
   } catch (err) {
     console.error("formLaporan error:", err);
@@ -379,11 +392,14 @@ exports.submitLaporan = async (req, res, next) => {
     const { actual_start_time, actual_end_time, notes } = req.body;
 
     if (!actual_start_time || !actual_end_time || !notes) {
-      const [[tugas]] = await db.query("SELECT * FROM overtime_requests WHERE id = ?", [id]);
+      const [[tugas]] = await db.query(
+        "SELECT * FROM overtime_requests WHERE id = ?",
+        [id],
+      );
       return res.render("pegawai/form_laporan", {
         title: "Isi Laporan Pelaksanaan",
         tugas,
-        error: "Semua isian waktu dan hasil pekerjaan wajib diisi."
+        error: "Semua isian waktu dan hasil pekerjaan wajib diisi.",
       });
     }
 
@@ -393,12 +409,14 @@ exports.submitLaporan = async (req, res, next) => {
       `SELECT or2.id FROM overtime_requests or2
        JOIN overtime_request_members orm ON orm.overtime_request_id = or2.id
        WHERE or2.id = ? AND orm.employee_id = ? AND or2.status IN ('assigned', 'pending')`,
-      [id, employeeId]
+      [id, employeeId],
     );
 
     if (!tugas) {
       await connection.rollback();
-      return res.status(400).render("error", { message: "Tugas tidak valid untuk dilaporkan." });
+      return res
+        .status(400)
+        .render("error", { message: "Tugas tidak valid untuk dilaporkan." });
     }
 
     // Hitung actual_hours
@@ -412,13 +430,13 @@ exports.submitLaporan = async (req, res, next) => {
       `UPDATE overtime_request_members 
        SET actual_start_time = ?, actual_end_time = ?, actual_hours = ?, notes = ?, updated_at = NOW()
        WHERE overtime_request_id = ? AND employee_id = ?`,
-      [actual_start_time, actual_end_time, actualHours, notes, id, employeeId]
+      [actual_start_time, actual_end_time, actualHours, notes, id, employeeId],
     );
 
     // 2. Update status overtime_request ke waiting_approval
     await connection.query(
       `UPDATE overtime_requests SET status = 'waiting_approval', updated_at = NOW() WHERE id = ?`,
-      [id]
+      [id],
     );
 
     await connection.commit();
@@ -493,7 +511,8 @@ exports.listTugas = async (req, res, next) => {
         title: "Daftar Tugas Lembur",
         tugas: [],
         filters: { keyword: "" },
-        error: "Profil pegawai Anda belum disiapkan di database. Silakan hubungi admin.",
+        error:
+          "Profil pegawai Anda belum disiapkan di database. Silakan hubungi admin.",
       });
     }
 
@@ -524,7 +543,7 @@ exports.listTugas = async (req, res, next) => {
       title: "Daftar Tugas Lembur",
       tugas,
       filters: { keyword },
-      error: null
+      error: null,
     });
   } catch (err) {
     console.error("listTugas error:", err);
@@ -567,31 +586,47 @@ exports.exportPdf = async (req, res, next) => {
     const PDFDocument = require("pdfkit");
     const doc = new PDFDocument({ margin: 50 });
 
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `attachment; filename="Daftar_Tugas_Lembur_${Date.now()}.pdf"`);
+    res.writeHead(200, {
+      "Content-Type": "application/pdf",
+      "Content-Disposition": `attachment; filename="Daftar_Tugas_Lembur_${Date.now()}.pdf"`,
+    });
+
     doc.pipe(res);
 
     // Title
-    doc.fontSize(18).font("Helvetica-Bold").text("DAFTAR PENUGASAN LEMBUR PEGAWAI", { align: "center" });
-    doc.fontSize(10).font("Helvetica").text(`Tanggal Cetak: ${new Date().toLocaleString("id-ID")}`, { align: "center" });
+    doc
+      .fontSize(18)
+      .font("Helvetica-Bold")
+      .text("DAFTAR PENUGASAN LEMBUR PEGAWAI", { align: "center" });
+    doc
+      .fontSize(10)
+      .font("Helvetica")
+      .text(`Tanggal Cetak: ${new Date().toLocaleString("id-ID")}`, {
+        align: "center",
+      });
     doc.moveDown(1.5);
 
     // Table Columns Setup
     const tableTop = 130;
-    const colPositions = [50, 180, 350, 470];
+    const colPositions = [60, 300];
 
     // Table Header Background
-    doc.fillColor("#f3f4f6").rect(50, tableTop - 5, 500, 22).fill();
-    
+    doc
+      .fillColor("#f3f4f6")
+      .rect(50, tableTop - 5, 520, 22)
+      .fill();
+
     // Table Header Text
     doc.fillColor("#1f2937").fontSize(10).font("Helvetica-Bold");
-    doc.text("No. Permintaan", colPositions[0], tableTop);
-    doc.text("Judul Agenda", colPositions[1], tableTop);
-    doc.text("Tanggal", colPositions[2], tableTop);
-    doc.text("Status", colPositions[3], tableTop);
+    doc.text("Nomor Permintaan", colPositions[0], tableTop);
+    doc.text("Agenda Lembur", colPositions[1], tableTop);
 
     // Header Line
-    doc.moveTo(50, tableTop + 17).lineTo(550, tableTop + 17).strokeColor("#e5e7eb").stroke();
+    doc
+      .moveTo(50, tableTop + 17)
+      .lineTo(550, tableTop + 17)
+      .strokeColor("#e5e7eb")
+      .stroke();
 
     let y = tableTop + 25;
     doc.font("Helvetica").fillColor("#374151");
@@ -601,117 +636,53 @@ exports.exportPdf = async (req, res, next) => {
         doc.addPage();
         y = 50;
         // Header on new page
-        doc.fillColor("#f3f4f6").rect(50, y - 5, 500, 22).fill();
+        doc
+          .fillColor("#f3f4f6")
+          .rect(50, y - 5, 500, 22)
+          .fill();
         doc.fillColor("#1f2937").fontSize(10).font("Helvetica-Bold");
         doc.text("No. Permintaan", colPositions[0], y);
         doc.text("Judul Agenda", colPositions[1], y);
         doc.text("Tanggal", colPositions[2], y);
         doc.text("Status", colPositions[3], y);
-        doc.moveTo(50, y + 17).lineTo(550, y + 17).strokeColor("#e5e7eb").stroke();
+        doc
+          .moveTo(50, y + 17)
+          .lineTo(550, y + 17)
+          .strokeColor("#e5e7eb")
+          .stroke();
         y += 25;
         doc.font("Helvetica").fillColor("#374151");
       }
 
-      const formattedDate = new Date(row.request_date).toLocaleDateString("id-ID", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric"
+      const formattedDate = new Date(row.request_date).toLocaleDateString(
+        "id-ID",
+        {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        },
+      );
+
+      doc.text(row.request_number, colPositions[0], y, {
+        width: 220,
       });
 
-      doc.text(row.request_number, colPositions[0], y);
-      doc.text(row.title, colPositions[1], y, { width: 160 });
-      doc.text(formattedDate, colPositions[2], y);
-      doc.text(row.status.toUpperCase(), colPositions[3], y);
+      doc.text(row.title, colPositions[1], y, {
+        width: 220,
+      });
 
       // Row separator
-      doc.moveTo(50, y + 18).lineTo(550, y + 18).strokeColor("#f3f4f6").stroke();
+      doc
+        .moveTo(50, y + 18)
+        .lineTo(550, y + 18)
+        .strokeColor("#f3f4f6")
+        .stroke();
       y += 25;
     }
 
     doc.end();
   } catch (err) {
     console.error("exportPdf error:", err);
-    next(err);
-  }
-};
-
-// ─────────────────────────────────────────────────────────────────────────────
-// FITUR 6: EXPORT EXCEL (GET /pegawai/tugas/export/excel)
-// ─────────────────────────────────────────────────────────────────────────────
-exports.exportExcel = async (req, res, next) => {
-  try {
-    const employeeId = await getEmployeeId(req);
-    if (!employeeId) {
-      return res.status(400).send("Profil pegawai belum disiapkan.");
-    }
-
-    const keyword = req.query.keyword || "";
-    let query = `
-      SELECT 
-        or2.request_number,
-        or2.title,
-        or2.request_date,
-        or2.status
-      FROM overtime_requests or2
-      JOIN overtime_request_members orm ON or2.id = orm.overtime_request_id
-      WHERE orm.employee_id = ?
-    `;
-    const params = [employeeId];
-
-    if (keyword) {
-      query += ` AND (or2.request_number LIKE ? OR or2.title LIKE ?)`;
-      params.push(`%${keyword}%`, `%${keyword}%`);
-    }
-
-    query += ` ORDER BY or2.request_date DESC, or2.id DESC`;
-
-    const [rows] = await db.query(query, params);
-
-    const excel = require("exceljs");
-    const workbook = new excel.Workbook();
-    const worksheet = workbook.addWorksheet("Tugas Lembur");
-
-    // Columns setup
-    worksheet.columns = [
-      { header: "Nomor Permintaan", key: "request_number", width: 25 },
-      { header: "Judul Agenda", key: "title", width: 40 },
-      { header: "Tanggal", key: "request_date", width: 15 },
-      { header: "Status", key: "status", width: 15 }
-    ];
-
-    // Styling headers
-    const headerRow = worksheet.getRow(1);
-    headerRow.font = { bold: true, color: { argb: "FFFFFF" } };
-    headerRow.fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "4F46E5" } // Indigo background
-    };
-
-    // Add rows
-    for (const row of rows) {
-      const formattedDate = new Date(row.request_date).toLocaleDateString("id-ID", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric"
-      });
-
-      worksheet.addRow({
-        request_number: row.request_number,
-        title: row.title,
-        request_date: formattedDate,
-        status: row.status
-      });
-    }
-
-    // Set Response Headers
-    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-    res.setHeader("Content-Disposition", `attachment; filename="Daftar_Tugas_Lembur_${Date.now()}.xlsx"`);
-
-    await workbook.xlsx.write(res);
-    res.end();
-  } catch (err) {
-    console.error("exportExcel error:", err);
     next(err);
   }
 };
@@ -725,7 +696,7 @@ exports.apiCariTugas = async (req, res) => {
     if (!employeeId) {
       return res.status(400).json({
         status: "error",
-        message: "Profil pegawai belum disiapkan."
+        message: "Profil pegawai belum disiapkan.",
       });
     }
 
@@ -755,13 +726,13 @@ exports.apiCariTugas = async (req, res) => {
       status: "success",
       keyword_dicari: keyword || "",
       total_data: rows.length,
-      data: rows
+      data: rows,
     });
   } catch (err) {
     console.error("apiCariTugas error:", err);
     res.status(500).json({
       status: "error",
-      message: err.message
+      message: err.message,
     });
   }
 };
@@ -774,7 +745,7 @@ exports.apiRiwayatLembur = async (req, res) => {
     if (!employeeId) {
       return res.status(400).json({
         status: "error",
-        message: "Profil pegawai belum terhubung dengan akun."
+        message: "Profil pegawai belum terhubung dengan akun.",
       });
     }
 
@@ -793,13 +764,13 @@ exports.apiRiwayatLembur = async (req, res) => {
       WHERE submitted_by_id = ?
       ORDER BY created_at DESC
       `,
-      [employeeId]
+      [employeeId],
     );
 
     return res.status(200).json({
       status: "success",
       total_data: riwayat.length,
-      data: riwayat
+      data: riwayat,
     });
   } catch (err) {
     console.error("apiRiwayatLembur error:", err);
@@ -807,7 +778,7 @@ exports.apiRiwayatLembur = async (req, res) => {
     return res.status(500).json({
       status: "error",
       message: "Terjadi kesalahan saat mengambil data riwayat lembur.",
-      detail: err.message
+      detail: err.message,
     });
   }
 };
@@ -815,9 +786,7 @@ exports.apiRiwayatLembur = async (req, res) => {
 const PDFDocument = require("pdfkit");
 
 exports.exportPdfRiwayat = async (req, res) => {
-  
   try {
-
     console.log("USER PDF:", req.user);
     console.log("SESSION USER:", req.user);
 
@@ -825,16 +794,14 @@ exports.exportPdfRiwayat = async (req, res) => {
 
     const [pegawai] = await db.query(
       "SELECT name FROM employees WHERE id = ?",
-      [employeeId]
+      [employeeId],
     );
 
     const namaPegawai =
-      pegawai.length > 0
-        ? pegawai[0].name
-        : "Tidak Diketahui";
+      pegawai.length > 0 ? pegawai[0].name : "Tidak Diketahui";
 
-        if (!employeeId) {
-          return res.status(400).send("Profil pegawai belum tersedia.");
+    if (!employeeId) {
+      return res.status(400).send("Profil pegawai belum tersedia.");
     }
 
     const [riwayat] = await db.query(
@@ -849,10 +816,8 @@ exports.exportPdfRiwayat = async (req, res) => {
       WHERE submitted_by_id = ?
       ORDER BY created_at DESC
       `,
-      [employeeId]
+      [employeeId],
     );
-
-
 
     const doc = new PDFDocument({
       margin: 40,
@@ -862,10 +827,7 @@ exports.exportPdfRiwayat = async (req, res) => {
     const filename = `riwayat-lembur-${Date.now()}.pdf`;
 
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename="${filename}"`
-    );
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
 
     doc.pipe(res);
 
@@ -879,20 +841,13 @@ exports.exportPdfRiwayat = async (req, res) => {
 
     doc.moveDown(1.5);
 
-    doc
-      .fontSize(11)
-      .font("Helvetica")
-      .text(`Nama Pegawai : ${namaPegawai}`);
+    doc.fontSize(11).font("Helvetica").text(`Nama Pegawai : ${namaPegawai}`);
 
-    doc.text(
-      `Tanggal Cetak : ${new Date().toLocaleDateString("id-ID")}`
-    );
+    doc.text(`Tanggal Cetak : ${new Date().toLocaleDateString("id-ID")}`);
 
     doc.moveDown();
 
-    doc.moveTo(50, doc.y)
-      .lineTo(550, doc.y)
-      .stroke();
+    doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
 
     let y = doc.y + 20;
 
@@ -906,51 +861,33 @@ exports.exportPdfRiwayat = async (req, res) => {
 
     y += 15;
 
-    doc.moveTo(50, y)
-      .lineTo(550, y)
-      .stroke();
+    doc.moveTo(50, y).lineTo(550, y).stroke();
 
     y += 10;
 
     doc.moveDown();
 
-doc.fontSize(10).font("Helvetica");
+    doc.fontSize(10).font("Helvetica");
 
-riwayat.forEach((item, index) => {
-  doc.text(String(index + 1), 50, y);
+    riwayat.forEach((item, index) => {
+      doc.text(String(index + 1), 50, y);
 
-  doc.text(
-    item.request_number || "-",
-    80,
-    y,
-    {
-      width: 120
-    }
-  );
+      doc.text(item.request_number || "-", 80, y, {
+        width: 120,
+      });
 
-  doc.text(
-    item.title || "-",
-    220,
-    y,
-    {
-      width: 220
-    }
-  );
+      doc.text(item.title || "-", 220, y, {
+        width: 220,
+      });
 
-  doc.text(
-    (item.status || "-").toUpperCase(),
-    470,
-    y,
-    {
-      width: 70
-    }
-  );
+      doc.text((item.status || "-").toUpperCase(), 470, y, {
+        width: 70,
+      });
 
-  y += 25;
-});
+      y += 25;
+    });
 
     doc.end();
-
   } catch (err) {
     console.error("exportPdfRiwayat error:", err);
 
