@@ -190,6 +190,7 @@ exports.simpanPermohonan = async (req, res, next) => {
       const [riwayat] = await db.query(
         `
         SELECT
+          id,
           request_number,
           title,
           request_date,
@@ -209,6 +210,30 @@ exports.simpanPermohonan = async (req, res, next) => {
     } catch (err) {
       console.error(err);
       res.status(500).send("Terjadi kesalahan");
+    }
+  };
+
+  exports.batalkanPermohonan = async (req, res) => {
+    try {
+      const employeeId = req.user.employee_id;
+      const requestId = req.params.id;
+
+      await db.query(
+        `
+        UPDATE overtime_requests
+        SET status = 'cancelled'
+        WHERE id = ?
+        AND submitted_by_id = ?
+        AND status = 'pending'
+        `,
+        [requestId, employeeId]
+      );
+
+      res.redirect("/pegawai/riwayat");
+
+    } catch (err) {
+      console.error(err);
+      res.status(500).send("Gagal membatalkan permohonan");
     }
   };
 
@@ -255,6 +280,68 @@ exports.apiRiwayatLembur = async (req, res) => {
       message: "Terjadi kesalahan saat mengambil data riwayat lembur.",
       detail: err.message
     });
+  }
+};
+
+exports.formLaporan = async (req, res) => {
+  try {
+
+    const requestId = req.params.id;
+
+    const [data] = await db.query(
+      `
+      SELECT *
+      FROM overtime_requests
+      WHERE id = ?
+      `,
+      [requestId]
+    );
+
+    if (data.length === 0) {
+      return res.status(404).send("Data tidak ditemukan");
+    }
+
+    res.render("pegawai/laporan", {
+      title: "Laporan Pelaksanaan Lembur",
+      lembur: data[0]
+    });
+
+  } catch (err) {
+
+    console.error(err);
+
+    res.status(500).send(
+      "Gagal membuka form laporan"
+    );
+  }
+};
+
+exports.simpanLaporan = async (req, res) => {
+
+  try {
+
+    const requestId = req.params.id;
+
+    const { laporan } = req.body;
+
+    await db.query(
+      `
+      UPDATE overtime_requests
+      SET realization_notes = ?
+      WHERE id = ?
+      `,
+      [laporan, requestId]
+    );
+
+    res.redirect("/pegawai/riwayat");
+
+  } catch (err) {
+
+    console.error(err);
+
+    res.status(500).send(
+      "Gagal menyimpan laporan"
+    );
   }
 };
 

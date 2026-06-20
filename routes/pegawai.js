@@ -13,6 +13,12 @@ router.post("/permohonan", pegawaiController.simpanPermohonan);
 
 router.get("/riwayat", pegawaiController.riwayatLembur);
 
+// Membatalkan Permohonan Lembur
+router.post("/riwayat/:id/batalkan", isAuthenticated, pegawaiController.batalkanPermohonan);
+
+router.get("/laporan/:id", isAuthenticated, pegawaiController.formLaporan);
+router.post("/laporan/:id", isAuthenticated, pegawaiController.simpanLaporan);
+
 // REST API Riwayat Lembur
 router.get("/api/riwayat", pegawaiController.apiRiwayatLembur);
 

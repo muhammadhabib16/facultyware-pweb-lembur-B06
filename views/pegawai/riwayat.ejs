@@ -28,50 +28,118 @@
     </div>
 
     <div class="card p-6">
-    <table class="w-full">
+
+      <table class="w-full">
+
         <thead>
-        <tr class="border-b">
-            <th class="text-left py-3 w-16">No</th>
-            <th class="text-left py-3 w-72">Nomor Request</th>
+          <tr class="border-b">
+            <th class="text-left py-3">No</th>
+            <th class="text-left py-3">Nomor Request</th>
             <th class="text-left py-3">Agenda Lembur</th>
-            <th class="text-left py-3 w-32">Status</th>
-        </tr>
+            <th class="text-left py-3">Status</th>
+            <th class="text-left py-3">Aksi</th>
+          </tr>
         </thead>
 
         <tbody>
-        <% riwayat.forEach((item, index) => { %>
-        <tr class="border-b">
-            <td class="py-3"><%= index + 1 %></td>
+
+          <% riwayat.forEach((item, index) => { %>
+
+          <tr class="border-b">
+
+            <td class="py-3">
+              <%= index + 1 %>
+            </td>
 
             <td class="py-3 font-mono text-sm">
-            <%= item.request_number %>
+              <%= item.request_number %>
             </td>
 
             <td class="py-3">
-            <%= item.title %>
+              <%= item.title %>
             </td>
 
             <td class="py-3">
-            <% if(item.status === 'pending'){ %>
+
+              <% if(item.status === 'pending'){ %>
+
                 <span class="px-2 py-1 rounded bg-yellow-500 text-black">
-                Pending
+                  Pending
                 </span>
-            <% } else if(item.status === 'completed'){ %>
+
+              <% } else if(item.status === 'approved'){ %>
+
+                <span class="px-2 py-1 rounded bg-blue-600 text-white">
+                  Approved
+                </span>
+
+              <% } else if(item.status === 'completed'){ %>
+
                 <span class="px-2 py-1 rounded bg-green-600 text-white">
-                Completed
+                  Completed
                 </span>
-            <% } else { %>
+
+              <% } else if(item.status === 'cancelled'){ %>
+
+                <span class="px-2 py-1 rounded bg-red-600 text-white">
+                  Cancelled
+                </span>
+
+              <% } else { %>
+
                 <span class="px-2 py-1 rounded bg-gray-600 text-white">
-                <%= item.status %>
+                  <%= item.status %>
                 </span>
-            <% } %>
+
+              <% } %>
+
             </td>
-        </tr>
-        <% }) %>
+
+            <td class="py-3">
+
+              <% if(item.status === 'pending'){ %>
+
+                <form
+                  action="/pegawai/riwayat/<%= item.id %>/batalkan"
+                  method="POST"
+                  onsubmit="return confirm('Yakin ingin membatalkan pengajuan ini?')"
+                >
+                  <button
+                    type="submit"
+                    class="btn btn-outline"
+                  >
+                    Batalkan
+                  </button>
+                </form>
+
+              <% } else if(item.status === 'approved' || item.status === 'completed'){ %>
+
+                <a
+                  href="/pegawai/laporan/<%= item.id %>"
+                  class="btn btn-primary"
+                >
+                  Isi Laporan
+                </a>
+
+              <% } else { %>
+
+                -
+
+              <% } %>
+
+            </td>
+
+          </tr>
+
+          <% }) %>
+
         </tbody>
-    </table>
+
+      </table>
+
     </div>
 
   </main>
+
 </body>
 </html>

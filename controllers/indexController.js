@@ -64,6 +64,7 @@ const home = async (req, res, next) => {
     });
   } catch (err) {
     console.error("Gagal memuat data statistik dashboard, Bos:", err);
+    console.error(err.stack);
     next(err);
   }
 };
