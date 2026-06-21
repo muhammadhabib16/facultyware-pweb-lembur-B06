@@ -8,7 +8,7 @@
     <div class="card p-6 space-y-4">
 
       <div>
-        <strong>Nomor Permintaan</strong>
+        <strong>Nomor Penugasan</strong>
         <p><%= tugas.request_number %></p>
       </div>
 
@@ -18,7 +18,12 @@
       </div>
 
       <div>
-        <strong>Tanggal Pengajuan</strong>
+        <strong>Pemberi Tugas</strong>
+        <p><%= tugas.pimpinan_name || '-' %></p>
+      </div>
+
+      <div>
+        <strong>Tanggal Penugasan</strong>
         <p>
           <%= new Date(tugas.request_date)
           .toLocaleDateString('id-ID') %>
@@ -26,7 +31,7 @@
       </div>
 
       <div>
-        <strong>Status</strong>
+        <strong>Status Penugasan</strong>
         <p><%= tugas.status %></p>
       </div>
 
@@ -36,4 +41,31 @@
       </div>
 
     </div>
+
+    <div class="flex gap-3 mt-6">
+        <a
+          href="/pegawai/tugas/<%= tugas.id %>/export/pdf"
+          hx-boost="false"
+          class="btn btn-outline"
+        >
+          Export Detail PDF
+        </a>
+      
+      <% if (tugas.status === 'assigned' || tugas.status === 'pending') { %>
+        <a
+          href="/pegawai/tugas/<%= tugas.id %>/lapor"
+          class="btn btn-primary"
+        >
+          Isi Laporan
+        </a>
+      <% } %>
+
+      <a
+        href="/pegawai/tugas"
+        class="btn btn-outline"
+      >
+        ← Kembali ke Daftar Penugasan
+      </a>
+    </div>
+
   </div>

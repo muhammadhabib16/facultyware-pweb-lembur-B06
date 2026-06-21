@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+
 const { isAuthenticated } = require("../middlewares/auth");
 const pegawaiController = require("../controllers/pegawaiController");
 
@@ -20,11 +21,15 @@ router.post("/permohonan/:id/batal", pegawaiController.batalPermohonan);
 // =====================================================
 router.get("/tugas", pegawaiController.listTugas);
 
+// Export PDF daftar tugas lama
+// Kalau tombol export daftar sudah tidak dipakai, route ini boleh dimatikan.
+// router.get("/tugas/export/pdf", pegawaiController.exportPdf);
+
+// Export PDF detail tugas
+router.get("/tugas/:id/export/pdf", pegawaiController.exportDetailPdf);
+
 // Detail tugas lembur
 router.get("/tugas/:id", pegawaiController.detailTugas);
-
-// Export PDF daftar tugas
-router.get("/tugas/export/pdf", pegawaiController.exportPdf);
 
 // =====================================================
 // LAPORAN LEMBUR

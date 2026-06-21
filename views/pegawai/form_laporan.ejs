@@ -11,6 +11,7 @@
         } catch (_) {}
       })();
     </script>
+
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title><%= title %> — Facultyware</title>
@@ -18,97 +19,105 @@
     <script src="/assets/js/basecoat.js?v=0.3.11" defer></script>
     <script src="https://unpkg.com/htmx.org@2.0.4"></script>
   </head>
-  <body class="bg-background flex min-h-screen text-foreground">
 
+  <body class="bg-background flex min-h-screen text-foreground">
     <%- include('../partials/sidebar') %>
 
-    <main class="flex-1 p-4 md:p-6 space-y-5 max-w-2xl mx-auto w-full" hx-boost="true">
-      <div class="flex items-center gap-4">
-        <a href="/pegawai/tugas/<%= tugas.id %>" class="btn btn-sm btn-outline cursor-pointer">← Kembali</a>
+    <main class="flex-1 p-4 md:p-6 space-y-5 max-w-4xl mx-auto w-full" hx-boost="true">
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight"><%= title %></h1>
+        <p class="text-sm text-muted-foreground">
+          Isi laporan pelaksanaan lembur setelah tugas selesai dikerjakan.
+        </p>
+      </div>
+
+      <div class="card p-6 border rounded-lg bg-background space-y-5">
         <div>
-          <h1 class="text-2xl font-bold tracking-tight">Formulir Laporan Pelaksanaan</h1>
-          <p class="text-xs text-muted-foreground">Isi dengan jujur jam kerja aktual dan hasil pekerjaan Anda untuk: <span class="font-semibold text-foreground"><%= tugas.title %></span></p>
-        </div>
-      </div>
-
-      <% if (error) { %>
-        <div class="bg-destructive/15 text-destructive p-3 rounded-lg text-sm font-semibold border border-destructive/20">
-          ⚠️ <%= error %>
-        </div>
-      <% } %>
-
-      <%-- Info ringkasan tugas --%>
-      <div class="bg-muted/50 border rounded-lg p-4 text-sm space-y-1">
-        <div class="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Rencana Awal (dari penugasan)</div>
-        <div class="flex flex-wrap gap-4">
-          <div>
-            <span class="text-muted-foreground text-xs">Tanggal:</span>
-            <span class="font-medium ml-1">
-              <%= new Date(tugas.request_date).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }) %>
-            </span>
-          </div>
-          <div>
-            <span class="text-muted-foreground text-xs">Rencana Jam:</span>
-            <span class="font-medium font-mono text-indigo-500 ml-1">
-              <%= new Date(tugas.planned_start_time).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'}) %>
-              –
-              <%= new Date(tugas.planned_end_time).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'}) %>
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <div class="card p-6 border rounded-xl shadow-sm bg-card space-y-6">
-        <form action="/pegawai/tugas/<%= tugas.id %>/lapor" method="POST" class="space-y-5">
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div class="space-y-1.5">
-              <label class="text-sm font-medium" for="actual_start_time">
-                Waktu Mulai Aktual <span class="text-destructive">*</span>
-              </label>
-              <input
-                id="actual_start_time"
-                type="datetime-local"
-                name="actual_start_time"
-                required
-                class="input w-full"
-                value="<%= new Date(tugas.planned_start_time).toISOString().slice(0, 16) %>"
-              />
+          <h2 class="text-lg font-semibold">Detail Penugasan</h2>
+          <div class="mt-4 space-y-3 text-sm">
+            <div>
+              <p class="font-semibold">Nomor Penugasan</p>
+              <p><%= tugas.request_number %></p>
             </div>
-            <div class="space-y-1.5">
-              <label class="text-sm font-medium" for="actual_end_time">
-                Waktu Selesai Aktual <span class="text-destructive">*</span>
-              </label>
-              <input
-                id="actual_end_time"
-                type="datetime-local"
-                name="actual_end_time"
-                required
-                class="input w-full"
-                value="<%= new Date(tugas.planned_end_time).toISOString().slice(0, 16) %>"
-              />
+
+            <div>
+              <p class="font-semibold">Agenda Lembur</p>
+              <p><%= tugas.title %></p>
+            </div>
+
+            <div>
+              <p class="font-semibold">Status</p>
+              <p>
+                <% if (tugas.status === 'assigned') { %>
+                  Assigned
+                <% } else if (tugas.status === 'pending') { %>
+                  Pending
+                <% } else if (tugas.status === 'waiting_approval') { %>
+                  Waiting Approval
+                <% } else if (tugas.status === 'approved') { %>
+                  Approved
+                <% } else if (tugas.status === 'rejected') { %>
+                  Rejected
+                <% } else if (tugas.status === 'cancelled') { %>
+                  Cancelled
+                <% } else { %>
+                  <%= tugas.status || '-' %>
+                <% } %>
+              </p>
             </div>
           </div>
+        </div>
 
-          <div class="space-y-1.5">
-            <label class="text-sm font-medium" for="notes">
-              Catatan / Hasil Pekerjaan <span class="text-destructive">*</span>
-            </label>
+        <% if (error) { %>
+          <div class="bg-red-500/15 text-red-500 text-sm p-4 rounded-md border border-red-500/20">
+            <%= error %>
+          </div>
+        <% } %>
+
+        <form
+          action="/pegawai/tugas/<%= tugas.id %>/lapor"
+          method="POST"
+          class="space-y-4"
+        >
+          <div class="space-y-2">
+            <label class="text-sm font-medium">Waktu Mulai Aktual</label>
+            <input
+              type="datetime-local"
+              name="actual_start_time"
+              class="input w-full"
+              required
+            />
+          </div>
+
+          <div class="space-y-2">
+            <label class="text-sm font-medium">Waktu Selesai Aktual</label>
+            <input
+              type="datetime-local"
+              name="actual_end_time"
+              class="input w-full"
+              required
+            />
+          </div>
+
+          <div class="space-y-2">
+            <label class="text-sm font-medium">Catatan Hasil Pekerjaan</label>
             <textarea
-              id="notes"
               name="notes"
               rows="5"
+              class="input w-full"
+              placeholder="Tuliskan hasil pekerjaan lembur..."
               required
-              class="textarea w-full"
-              placeholder="Deskripsikan secara singkat apa saja yang telah diselesaikan selama jam lembur berlangsung..."></textarea>
-            <p class="text-xs text-muted-foreground">Penjelasan yang jelas akan mempermudah pimpinan dalam proses verifikasi.</p>
+            ></textarea>
           </div>
 
-          <div class="pt-2 flex justify-end gap-2">
-            <a href="/pegawai/tugas/<%= tugas.id %>" class="btn btn-outline">Batal</a>
+          <div class="flex gap-3 pt-2">
             <button type="submit" class="btn btn-primary">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="m5 12 5 5L20 7"/></svg>
-              Submit & Kirim ke Pimpinan
+              Submit Report
             </button>
+
+            <a href="/pegawai/tugas/<%= tugas.id %>" class="btn btn-outline">
+              Cancel
+            </a>
           </div>
         </form>
       </div>
