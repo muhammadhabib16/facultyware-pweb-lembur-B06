@@ -1,0 +1,39 @@
+<%- include("../partials/header") %>
+
+<div class="p-8">
+  <h1 class="text-3xl font-bold mb-2">Detail Riwayat Lembur</h1>
+  <p class="text-muted-foreground mb-6">Detail data pengajuan dan laporan lembur.</p>
+
+  <div class="card p-6 space-y-4">
+    <div>
+      <p class="font-semibold">Nomor Request</p>
+      <p><%= lembur.request_number %></p>
+    </div>
+
+    <div>
+      <p class="font-semibold">Agenda Lembur</p>
+      <p><%= lembur.title %></p>
+    </div>
+
+    <div>
+      <p class="font-semibold">Status</p>
+      <p><%= formatStatus(lembur.status) %></p>
+    </div>
+
+    <div>
+      <p class="font-semibold">Deskripsi</p>
+      <p><%= lembur.description || "-" %></p>
+    </div>
+
+    <div>
+      <p class="font-semibold">Catatan Laporan</p>
+      <p><%= lembur.realization_notes || lembur.notes || "-" %></p>
+    </div>
+
+    <a href="/pegawai/riwayat" class="btn btn-outline">
+      Kembali
+    </a>
+  </div>
+</div>
+
+<%- include("../partials/footer") %>

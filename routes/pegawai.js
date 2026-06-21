@@ -11,6 +11,7 @@ router.use(isAuthenticated);
 router.get("/permohonan", pegawaiController.formPermohonan);
 router.post("/permohonan", pegawaiController.simpanPermohonan);
 
+router.get("/riwayat/:id/detail", pegawaiController.detailRiwayat);
 router.get("/riwayat", pegawaiController.riwayatLembur);
 
 // Membatalkan Permohonan Lembur

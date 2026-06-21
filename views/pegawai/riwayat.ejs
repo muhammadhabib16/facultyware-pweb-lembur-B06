@@ -5,6 +5,7 @@
   <title><%= title %></title>
   <link rel="stylesheet" href="/assets/styles.css">
 </head>
+
 <body class="bg-background flex min-h-screen">
 
   <%- include('../partials/sidebar') %>
@@ -43,95 +44,128 @@
 
         <tbody>
 
-          <% riwayat.forEach((item, index) => { %>
+          <% if (!riwayat || riwayat.length === 0) { %>
 
-          <tr class="border-b">
+            <tr>
+              <td colspan="5" class="py-6 text-center text-muted-foreground">
+                Belum ada riwayat lembur.
+              </td>
+            </tr>
 
-            <td class="py-3">
-              <%= index + 1 %>
-            </td>
+          <% } else { %>
 
-            <td class="py-3 font-mono text-sm">
-              <%= item.request_number %>
-            </td>
+            <% riwayat.forEach((item, index) => { %>
 
-            <td class="py-3">
-              <%= item.title %>
-            </td>
+              <tr class="border-b">
 
-            <td class="py-3">
+                <td class="py-3">
+                  <%= index + 1 %>
+                </td>
 
-              <% if(item.status === 'pending'){ %>
+                <td class="py-3 font-mono text-sm">
+                  <%= item.request_number %>
+                </td>
 
-                <span class="px-2 py-1 rounded bg-yellow-500 text-black">
-                  Pending
-                </span>
+                <td class="py-3">
+                  <%= item.title %>
+                </td>
 
-              <% } else if(item.status === 'approved'){ %>
+                <td class="py-3">
 
-                <span class="px-2 py-1 rounded bg-blue-600 text-white">
-                  Approved
-                </span>
+                  <% if (item.status === 'pending') { %>
 
-              <% } else if(item.status === 'completed'){ %>
+                    <span class="px-2 py-1 rounded bg-yellow-500 text-black text-sm">
+                      Pending
+                    </span>
 
-                <span class="px-2 py-1 rounded bg-green-600 text-white">
-                  Completed
-                </span>
+                  <% } else if (item.status === 'approved') { %>
 
-              <% } else if(item.status === 'cancelled'){ %>
+                    <span class="px-2 py-1 rounded bg-blue-600 text-white text-sm">
+                      Approved
+                    </span>
 
-                <span class="px-2 py-1 rounded bg-red-600 text-white">
-                  Cancelled
-                </span>
+                  <% } else if (item.status === 'completed') { %>
 
-              <% } else { %>
+                    <span class="px-2 py-1 rounded bg-green-600 text-white text-sm">
+                      Completed
+                    </span>
 
-                <span class="px-2 py-1 rounded bg-gray-600 text-white">
-                  <%= item.status %>
-                </span>
+                  <% } else if (item.status === 'waiting_approval') { %>
 
-              <% } %>
+                    <span class="px-2 py-1 rounded bg-orange-500 text-black text-sm">
+                      Waiting Approval
+                    </span>
 
-            </td>
+                  <% } else if (item.status === 'cancelled') { %>
 
-            <td class="py-3">
+                    <span class="px-2 py-1 rounded bg-red-600 text-white text-sm">
+                      Cancelled
+                    </span>
 
-              <% if(item.status === 'pending'){ %>
+                  <% } else if (item.status === 'rejected') { %>
 
-                <form
-                  action="/pegawai/riwayat/<%= item.id %>/batalkan"
-                  method="POST"
-                  onsubmit="return confirm('Yakin ingin membatalkan pengajuan ini?')"
-                >
-                  <button
-                    type="submit"
-                    class="btn btn-outline"
-                  >
-                    Batalkan
-                  </button>
-                </form>
+                    <span class="px-2 py-1 rounded bg-red-700 text-white text-sm">
+                      Rejected
+                    </span>
 
-              <% } else if(item.status === 'approved' || item.status === 'completed'){ %>
+                  <% } else { %>
 
-                <a
-                  href="/pegawai/laporan/<%= item.id %>"
-                  class="btn btn-primary"
-                >
-                  Isi Laporan
-                </a>
+                    <span class="px-2 py-1 rounded bg-gray-600 text-white text-sm">
+                      <%= item.status || '-' %>
+                    </span>
 
-              <% } else { %>
+                  <% } %>
 
-                -
+                </td>
 
-              <% } %>
+                <td class="py-3">
 
-            </td>
+                  <% if (item.status === 'pending') { %>
 
-          </tr>
+                    <form
+                      action="/pegawai/permohonan/<%= item.id %>/batal"
+                      method="POST"
+                      onsubmit="return confirm('Yakin ingin membatalkan pengajuan ini?')"
+                    >
+                      <button
+                        type="submit"
+                        class="btn btn-sm btn-outline"
+                      >
+                        Batalkan
+                      </button>
+                    </form>
 
-          <% }) %>
+                  <% } else if (item.status === 'completed') { %>
+
+                    <a
+                      href="/pegawai/laporan/<%= item.id %>"
+                      class="btn btn-sm btn-primary"
+                    >
+                      Isi Laporan
+                    </a>
+
+                  <% } else if (item.status === 'waiting_approval') { %>
+
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-outline"
+                    >
+                      Detail
+                    </button>
+
+                  <% } else { %>
+
+                    <span>-</span>
+
+                  <% } %>
+
+                </td>
+
+              </tr>
+
+            <% }) %>
+
+          <% } %>
 
         </tbody>
 
@@ -142,4 +176,3 @@
   </main>
 
 </body>
-</html>
