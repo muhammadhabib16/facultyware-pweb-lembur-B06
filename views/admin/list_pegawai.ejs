@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <script>
+      (() => {
+        try {
+          const stored = localStorage.getItem("themeMode");
+          if (stored ? stored === "dark" : matchMedia("(prefers-color-scheme: dark)").matches) {
+            document.documentElement.classList.add("dark");
+          }
+        } catch (_) {}
+      })();
+    </script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title><%= title %> — Facultyware</title>
+    <link rel="stylesheet" href="/assets/styles.css" />
+    <script src="/assets/js/basecoat.js?v=0.3.11" defer></script>
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+  </head>
+  <body class="bg-background flex min-h-screen text-foreground overflow-x-hidden">
+
+    <%- include('../partials/sidebar') %>
+
+    <main class="flex-1 p-8 md:p-10 space-y-6" hx-boost="true">
+      
+      <!-- Toast Alert -->
+      <% if (toast === 'tambah_sukses') { %>
+        <div class="bg-emerald-500/15 text-emerald-500 text-sm p-4 rounded-md border border-emerald-500/20 text-center mb-6 shadow-sm">
+          Pegawai baru beserta akun login berhasil ditambahkan!
+        </div>
+      <% } %>
+
+      <div class="flex flex-col md:flex-row justify-between md:items-center gap-4">
+        <div>
+          <h1 class="text-2xl font-bold tracking-tight"><%= title %></h1>
+          <p class="text-sm text-muted-foreground">Kelola dan tambahkan pegawai baru ke dalam sistem Facultyware.</p>
+        </div>
+        
+        <a hx-get="/admin/pegawai/tambah" hx-target="body" hx-swap="outerHTML" hx-push-url="true" class="btn btn-primary cursor-pointer border-none shadow-sm flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+          </svg>
+          Tambah Pegawai Baru
+        </a>
+      </div>
+
+      <div class="card overflow-hidden border rounded-lg shadow-sm bg-background">
+        <div class="overflow-x-auto">
+          <table class="table w-full text-left border-collapse text-sm">
+            <thead class="bg-muted/50 font-medium text-muted-foreground">
+              <tr class="border-b">
+                <th class="p-4">NIP / No. Pegawai</th>
+                <th class="p-4">Nama</th>
+                <th class="p-4">Gender</th>
+                <th class="p-4">Divisi/Unit</th>
+                <th class="p-4">Status Kerja</th>
+                <th class="p-4 text-center">Status</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y">
+              <% if (employees && employees.length > 0) { %>
+                <% employees.forEach(item => { %>
+                  <tr class="hover:bg-muted/30 transition-colors">
+                    <td class="p-4 font-mono text-xs font-semibold text-primary"><%= item.employee_number %></td>
+                    <td class="p-4 font-medium"><%= item.name %></td>
+                    <td class="p-4 text-muted-foreground capitalize"><%= item.gender === 'male' ? 'Laki-laki' : 'Perempuan' %></td>
+                    <td class="p-4 text-muted-foreground"><%= item.unit_name || '-' %></td>
+                    <td class="p-4 text-muted-foreground"><%= item.employment_status_name || '-' %></td>
+                    <td class="p-4 text-center">
+                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold tracking-wide capitalize <%= item.status === 'active' ? 'bg-emerald-500/15 text-emerald-600' : 'bg-destructive/15 text-destructive' %>">
+                        <%= item.status === 'active' ? 'Aktif' : 'Nonaktif' %>
+                      </span>
+                    </td>
+                  </tr>
+                <% }) %>
+              <% } else { %>
+                <tr>
+                  <td colspan="6" class="p-8 text-center text-muted-foreground">
+                    Belum ada data pegawai yang terdaftar.
+                  </td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>

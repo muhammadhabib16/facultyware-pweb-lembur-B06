@@ -11,4 +11,9 @@ router.get("/rekap", adminController.halamanRekap);
 // Tombol Export Excel
 router.get("/rekap/export", adminController.exportExcel);
 
+// Kelola Pegawai
+router.get("/pegawai", adminController.halamanPegawai);
+router.get("/pegawai/tambah", adminController.halamanTambahPegawai);
+router.post("/pegawai/tambah", adminController.simpanPegawai);
+
 module.exports = router;

@@ -127,3 +127,29 @@ test.describe('Alur Pimpinan: Validasi & Penugasan', () => {
   });
 
 });
+
+test.describe('Alur Admin: Kelola Pegawai', () => {
+
+  test.beforeEach(async ({ page }) => {
+    // Login sebagai admin
+    await page.goto('/login');
+    await page.fill('input[name="email"]', 'darrel@facultyware.com');
+    await page.fill('input[name="password"]', 'password123');
+    await page.click('button[type="submit"]');
+  });
+
+  test('Admin dapat mengakses halaman kelola pegawai', async ({ page }) => {
+    await page.goto('/admin/pegawai');
+    await expect(page.locator('h1')).toContainText('Kelola Pegawai');
+    await expect(page.locator('table')).toBeVisible();
+  });
+
+  test('Admin dapat mengakses form tambah pegawai', async ({ page }) => {
+    await page.goto('/admin/pegawai/tambah');
+    await expect(page.locator('h1')).toContainText('Tambah Pegawai Baru');
+    await expect(page.locator('input[name="name"]')).toBeVisible();
+    await expect(page.locator('input[name="employee_number"]')).toBeVisible();
+  });
+
+});
+
