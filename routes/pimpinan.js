@@ -15,11 +15,39 @@ router.get(
   laporanController.listLaporan,
 );
 
+// ── Fitur Baru: REST API Statistik Laporan ───────────────────────────────────
+router.get(
+  "/laporan/statistik",
+  checkPermission("view_overtime_reports"),
+  laporanController.apiStatistikLaporan,
+);
+
+// ── Fitur Baru: Ekspor Rekap Laporan ke PDF (filter bulan opsional) ──────────
+router.get(
+  "/laporan/ekspor/pdf",
+  checkPermission("view_overtime_reports"),
+  laporanController.eksporPDF,
+);
+
 // ── Fitur 14: Detail laporan lembur ──────────────────────────────────────────
 router.get(
   "/laporan/:id",
   checkPermission("view_overtime_reports"),
   laporanController.detailLaporan,
+);
+
+// ── Fitur Baru: Ekspor Detail Laporan ke PDF ─────────────────────────────────
+router.get(
+  "/laporan/:id/ekspor/pdf",
+  checkPermission("view_overtime_reports"),
+  laporanController.eksporDetailPDF,
+);
+
+// ── Fitur Baru: Ekspor Detail Laporan ke DOCX ────────────────────────────────
+router.get(
+  "/laporan/:id/ekspor/docx",
+  checkPermission("view_overtime_reports"),
+  laporanController.eksporDetailDOCX,
 );
 
 // -- Penugasan Lembur
@@ -50,7 +78,7 @@ router.post(
   pimpinanController.simpanPenugasan,
 );
 
-// ── Fitur 10: Pimpinan melihat daftar & detail penugasan (Muhammad Habib) ──
+// ── Fitur 10: Pimpinan melihat daftar & detail penugasan  ──
 router.get(
   "/penugasan",
   checkPermission("view_overtime_assignments"),
@@ -63,7 +91,7 @@ router.get(
   pimpinanController.detailPenugasan,
 );
 
-// ── Fitur 11: Pimpinan mengubah data penugasan lembur (Muhammad Habib) ──
+// ── Fitur 11: Pimpinan mengubah data penugasan lembur  ──
 router.get(
   "/penugasan/:id/edit",
   checkPermission("edit_overtime_assignments"),
@@ -74,6 +102,13 @@ router.post(
   "/penugasan/:id/edit",
   checkPermission("edit_overtime_assignments"),
   pimpinanController.updatePenugasan,
+);
+
+// ── Fitur 17: Pimpinan menghapus/membatalkan penugasan lembur──
+router.delete(
+  "/penugasan/:id",
+  checkPermission("edit_overtime_assignments"),
+  pimpinanController.hapusPenugasan,
 );
 
 module.exports = router;

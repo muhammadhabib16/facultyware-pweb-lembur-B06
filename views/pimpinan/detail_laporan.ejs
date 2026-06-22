@@ -1,197 +1,251 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <script>
-      (() => {
-        try {
-          const stored = localStorage.getItem("themeMode");
-          if (stored ? stored === "dark" : matchMedia("(prefers-color-scheme: dark)").matches) {
-            document.documentElement.classList.add("dark");
-          }
-        } catch (_) {}
-      })();
-    </script>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title><%= title %> — Facultyware</title>
-    <link rel="stylesheet" href="/assets/styles.css" />
-    <script src="/assets/js/basecoat.js?v=0.3.11" defer></script>
-    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
-  </head>
-  <body class="bg-background flex min-h-screen text-foreground overflow-x-hidden">
 
-    <%- include('../partials/sidebar') %>
+<head>
+  <script>
+    (() => {
+      try {
+        const stored = localStorage.getItem("themeMode");
+        if (stored ? stored === "dark" : matchMedia("(prefers-color-scheme: dark)").matches) {
+          document.documentElement.classList.add("dark");
+        }
+      } catch (_) { }
+    })();
+  </script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>
+    <%= title %> — Facultyware
+  </title>
+  <link rel="stylesheet" href="/assets/styles.css" />
+  <script src="/assets/js/basecoat.js?v=0.3.11" defer></script>
+  <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+</head>
 
-    <main class="flex-1 p-8 md:p-10 space-y-6" hx-boost="true">
-  <div class="mb-6 flex items-center justify-between" hx-boost="true">
-    <a href="/pimpinan/laporan" class="btn btn-sm btn-outline">
-      ← Kembali ke Daftar Laporan
-    </a>
-    <div class="text-xs font-mono text-muted-foreground">ID Permohonan: #<%= laporan.id %></div>
-  </div>
+<body class="bg-background flex min-h-screen text-foreground overflow-x-hidden">
 
-  <div class="card p-6 border rounded-lg bg-background shadow-sm mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-    <div>
-      <div class="flex items-center gap-3 mb-1">
-        <h1 class="text-xl font-bold"><%= laporan.title %></h1>
-        <% if (laporan.status === 'completed') { %>
-          <span class="badge bg-amber-100 text-amber-800 text-xs px-2.5 py-0.5 rounded-full font-medium">Menunggu Konfirmasi</span>
-        <% } else if (laporan.status === 'approved') { %>
-          <span class="badge bg-emerald-100 text-emerald-800 text-xs px-2.5 py-0.5 rounded-full font-medium">Disetujui</span>
-        <% } else { %>
-          <span class="badge bg-destructive/10 text-destructive text-xs px-2.5 py-0.5 rounded-full font-medium">Ditolak</span>
+  <%- include('../partials/sidebar') %>
+
+    <main class="flex-1 p-4 md:p-6 space-y-5 max-w-6xl mx-auto w-full" hx-boost="true">
+      <div class="mb-6 flex items-center justify-between" hx-boost="true">
+        <a href="/pimpinan/laporan" class="btn btn-sm btn-outline">
+          ← Kembali ke Daftar Laporan
+        </a>
+        <div class="text-xs font-mono text-muted-foreground">ID Permohonan: #<%= laporan.id %>
+        </div>
+      </div>
+
+      <div
+        class="card p-6 border rounded-lg bg-background shadow-sm mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <div class="flex items-center gap-3 mb-1">
+            <h1 class="text-xl font-bold">
+              <%= laporan.title %>
+            </h1>
+            <% if (laporan.status==='waiting_approval' ) { %>
+              <span class="badge bg-amber-100 text-amber-800 text-xs px-2.5 py-0.5 rounded-full font-medium">Waiting Approval</span>
+              <% } else if (laporan.status==='approved' ) { %>
+                <span
+                  class="badge bg-emerald-100 text-emerald-800 text-xs px-2.5 py-0.5 rounded-full font-medium">Disetujui</span>
+                <% } else { %>
+                  <span
+                    class="badge bg-destructive/10 text-destructive text-xs px-2.5 py-0.5 rounded-full font-medium">Ditolak</span>
+                  <% } %>
+          </div>
+          <p class="text-sm font-mono text-muted-foreground">
+            <%= laporan.request_number %> • Unit: <%= laporan.unit_name %>
+          </p>
+        </div>
+
+        <% if (laporan.status==='waiting_approval' ) { %>
+          <div class="flex gap-2 w-full md:w-auto">
+            <button onclick="toggleModal('rejectModal')"
+              class="btn btn-outline border-destructive text-destructive hover:bg-destructive/10 w-full md:w-auto">
+              Tolak / Minta Revisi
+            </button>
+
+            <button hx-post="/pimpinan/laporan/<%= laporan.id %>/konfirmasi"
+              hx-confirm="Apakah Anda yakin ingin mengonfirmasi dan menyetujui laporan pelaksanaan lembur ini?"
+              class="btn btn-primary w-full md:w-auto">
+              Konfirmasi Setuju
+            </button>
+          </div>
+          <% } %>
+
+        <% if (laporan.status === 'approved') { %>
+          <div class="flex gap-2 w-full md:w-auto">
+            <a 
+              href="/pimpinan/laporan/<%= laporan.id %>/ekspor/pdf" 
+              hx-boost="false"
+              class="btn btn-sm btn-outline inline-flex items-center gap-1.5"
+              title="Unduh laporan sebagai file PDF"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Unduh PDF
+            </a>
+            <a 
+              href="/pimpinan/laporan/<%= laporan.id %>/ekspor/docx" 
+              hx-boost="false"
+              class="btn btn-sm btn-outline inline-flex items-center gap-1.5"
+              title="Unduh laporan sebagai file DOCX (Word)"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+              Unduh DOCX
+            </a>
+          </div>
         <% } %>
       </div>
-      <p class="text-sm font-mono text-muted-foreground"><%= laporan.request_number %> • Unit: <%= laporan.unit_name %></p>
-    </div>
 
-    <% if (laporan.status === 'completed') { %>
-      <div class="flex gap-2 w-full md:w-auto">
-        <button 
-          onclick="toggleModal('rejectModal')"
-          class="btn btn-outline border-destructive text-destructive hover:bg-destructive/10 w-full md:w-auto">
-          Tolak / Minta Revisi
-        </button>
-        
-        <button 
-          hx-post="/pimpinan/laporan/<%= laporan.id %>/konfirmasi"
-          hx-confirm="Apakah Anda yakin ingin mengonfirmasi dan menyetujui laporan pelaksanaan lembur ini?"
-          class="btn btn-primary w-full md:w-auto">
-          Konfirmasi Setuju
-        </button>
-      </div>
-    <% } %>
-  </div>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 flex flex-col gap-6">
 
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <div class="lg:col-span-2 flex flex-col gap-6">
-      
-      <div class="card border rounded-lg bg-background shadow-sm p-6">
-        <h2 class="text-md font-semibold mb-4 border-b pb-2">Detail Waktu & Rencana Pelaksanaan</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-          <div>
-            <span class="text-muted-foreground block text-xs">Tanggal Pelaksanaan Lembur</span>
-            <span class="font-medium"><%= new Date(laporan.request_date).toLocaleDateString('id-ID', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }) %></span>
-          </div>
-          <div>
-            <span class="text-muted-foreground block text-xs">Diajukan Oleh (Staf/Admin)</span>
-            <span class="font-medium"><%= laporan.submitted_by_name %> (NIP: <%= laporan.submitted_by_nip || '-' %>)</span>
-          </div>
-          <div>
-            <span class="text-muted-foreground block text-xs">Rencana Jam Kerja</span>
-            <span class="font-medium"><%= laporan.planned_start_time.substring(0, 5) %> s/d <%= laporan.planned_end_time.substring(0, 5) %> WIB</span>
-          </div>
-          <div>
-            <span class="text-muted-foreground block text-xs">Deskripsi Tugas</span>
-            <p class="font-medium mt-0.5 text-muted-foreground"><%= laporan.description || 'Tidak ada deskripsi tambahan.' %></p>
-          </div>
-        </div>
-      </div>
-
-      <div class="card border rounded-lg bg-background shadow-sm overflow-hidden">
-        <div class="p-4 bg-muted/30 border-b">
-          <h2 class="text-sm font-semibold">Daftar Anggota & Laporan Realisasi Kerja Aktual</h2>
-        </div>
-        <div class="overflow-x-auto">
-          <table class="table w-full text-left border-collapse text-sm">
-            <thead>
-              <tr class="border-b bg-muted/10 text-xs font-medium text-muted-foreground uppercase">
-                <th class="p-3">Nama Pegawai / NIP</th>
-                <th class="p-3 text-center">Jam Realisasi</th>
-                <th class="p-3">Keterangan / Output Hasil Kerja</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y">
-              <% anggota.forEach(member => { %>
-                <tr class="hover:bg-muted/20">
-                  <td class="p-3">
-                    <div class="font-medium"><%= member.employee_name %></div>
-                    <div class="text-xs text-muted-foreground">NIP: <%= member.employee_nip || '-' %></div>
-                  </td>
-                  <td class="p-3 text-center font-mono text-xs">
-                    <% if (member.actual_start_time && member.actual_end_time) { %>
-                      <span class="bg-muted px-2 py-1 rounded font-medium">
-                        <%= member.actual_start_time.substring(0, 5) %> - <%= member.actual_end_time.substring(0, 5) %>
-                      </span>
-                    <% } else { %>
-                      <span class="text-muted-foreground italic text-xs">Belum mengisi laporan</span>
-                    <% } %>
-                  </td>
-                  <td class="p-3 text-xs text-muted-foreground max-w-xs truncate" title="<%= member.notes %>">
-                    <%= member.notes || '-' %>
-                  </td>
-                </tr>
-              <% }) %>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <div class="lg:col-span-1">
-      <div class="card border rounded-lg bg-background shadow-sm p-4 sticky top-6">
-        <h2 class="text-sm font-semibold mb-4 border-b pb-2">Riwayat Log Persetujuan</h2>
-        
-        <% if (approvalLogs.length === 0) { %>
-          <p class="text-xs text-muted-foreground italic text-center py-4">Belum ada riwayat aktivitas log pada laporan ini.</p>
-        <% } else { %>
-          <div class="relative pl-4 border-l border-muted space-y-4 text-xs">
-            <% approvalLogs.forEach(log => { %>
-              <div class="relative">
-                <div class="absolute -left-[21px] mt-1 h-2 w-2 rounded-full border bg-background <%= log.status === 'approved' ? 'border-emerald-500 bg-emerald-500' : 'border-destructive bg-destructive' %>"></div>
-                <div class="flex items-center justify-between font-medium">
-                  <span class="capitalize"><%= log.status === 'approved' ? 'Disetujui' : 'Ditolak/Revisi' %></span>
-                  <span class="text-[10px] text-muted-foreground">
-                    <%= new Date(log.action_date).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }) %>
-                  </span>
-                </div>
-                <p class="text-muted-foreground mt-0.5">Oleh: <%= log.approver_name %></p>
-                <% if (log.notes) { %>
-                  <div class="mt-1 p-2 bg-muted/60 rounded text-muted-foreground border italic">
-                    "<%= log.notes %>"
-                  </div>
-                <% } %>
+          <div class="card border rounded-lg bg-background shadow-sm p-6">
+            <h2 class="text-md font-semibold mb-4 border-b pb-2">Detail Waktu & Rencana Pelaksanaan</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+              <div>
+                <span class="text-muted-foreground block text-xs">Tanggal Pelaksanaan Lembur</span>
+                <span class="font-medium">
+                  <%= new Date(laporan.request_date).toLocaleDateString('id-ID', { weekday: 'long' , day: '2-digit' ,
+                    month: 'long' , year: 'numeric' }) %>
+                </span>
               </div>
-            <% }) %>
+              <div>
+                <span class="text-muted-foreground block text-xs">Diajukan Oleh (Staf/Admin)</span>
+                <span class="font-medium">
+                  <%= laporan.submitted_by_name %> (NIP: <%= laporan.submitted_by_nip || '-' %>)
+                </span>
+              </div>
+              <div>
+                <span class="text-muted-foreground block text-xs">Rencana Jam Kerja</span>
+                <span class="font-medium">
+                  <%= new Date(laporan.planned_start_time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) %> s/d <%= new Date(laporan.planned_end_time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) %>
+                      WIB
+                </span>
+              </div>
+              <div>
+                <span class="text-muted-foreground block text-xs">Deskripsi Tugas</span>
+                <p class="font-medium mt-0.5 text-muted-foreground">
+                  <%= laporan.description || 'Tidak ada deskripsi tambahan.' %>
+                </p>
+              </div>
+            </div>
           </div>
-        <% } %>
-      </div>
-    </div>
-  </div>
-<div id="rejectModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-fade-in">
-  <div class="bg-background border rounded-lg shadow-lg w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-200">
-    <div class="p-4 border-b flex justify-between items-center bg-muted/20">
-      <h3 class="font-bold text-sm">Berikan Catatan Penolakan / Revisi</h3>
-      <button onclick="toggleModal('rejectModal')" class="text-muted-foreground hover:text-foreground text-lg font-bold">&times;</button>
-    </div>
-    <form hx-post="/pimpinan/laporan/<%= laporan.id %>/tolak" class="p-4">
-      <div class="mb-4">
-        <label class="block text-xs font-semibold mb-1">Alasan Penolakan / Catatan Perbaikan <span class="text-destructive">*</span></label>
-        <textarea 
-          name="catatan_revisi" 
-          rows="4" 
-          class="textarea w-full text-sm p-2 border rounded" 
-          placeholder="Tuliskan alasan penolakan secara jelas agar staf dapat merevisi data dengan benar..."
-          required
-        ></textarea>
-      </div>
-      <div class="flex justify-end gap-2 border-t pt-3">
-        <button type="button" onclick="toggleModal('rejectModal')" class="btn btn-sm btn-outline">Batal</button>
-        <button type="submit" class="btn btn-sm btn-destructive">Kirim Penolakan</button>
-      </div>
-    </form>
-  </div>
-</div>
 
-<script>
-  function toggleModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-      modal.classList.toggle('hidden');
-    }
-  }
-</script>
+          <div class="card border rounded-lg bg-background shadow-sm overflow-hidden">
+            <div class="p-4 bg-muted/30 border-b">
+              <h2 class="text-sm font-semibold">Daftar Anggota & Laporan Realisasi Kerja Aktual</h2>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="table w-full text-left border-collapse text-sm">
+                <thead>
+                  <tr class="border-b bg-muted/10 text-xs font-medium text-muted-foreground uppercase">
+                    <th class="p-3">Nama Pegawai / NIP</th>
+                    <th class="p-3 text-center">Jam Realisasi</th>
+                    <th class="p-3">Keterangan / Output Hasil Kerja</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y">
+                  <% anggota.forEach(member=> { %>
+                    <tr class="hover:bg-muted/20">
+                      <td class="p-3">
+                        <div class="font-medium">
+                          <%= member.employee_name %>
+                        </div>
+                        <div class="text-xs text-muted-foreground">NIP: <%= member.employee_nip || '-' %>
+                        </div>
+                      </td>
+                      <td class="p-3 text-center font-mono text-xs">
+                        <% if (member.actual_start_time && member.actual_end_time) { %>
+                          <span class="bg-muted px-2 py-1 rounded font-medium">
+                            <%= new Date(member.actual_start_time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) %> - <%= new Date(member.actual_end_time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) %>
+                          </span>
+                          <% } else { %>
+                            <span class="text-muted-foreground italic text-xs">Belum mengisi laporan</span>
+                            <% } %>
+                      </td>
+                      <td class="p-3 text-xs text-muted-foreground max-w-xs truncate" title="<%= member.notes %>">
+                        <%= member.notes || '-' %>
+                      </td>
+                    </tr>
+                    <% }) %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-1">
+          <div class="card border rounded-lg bg-background shadow-sm p-4 sticky top-6">
+            <h2 class="text-sm font-semibold mb-4 border-b pb-2">Riwayat Log Persetujuan</h2>
+
+            <% if (approvalLogs.length===0) { %>
+              <p class="text-xs text-muted-foreground italic text-center py-4">Belum ada riwayat aktivitas log pada
+                laporan ini.</p>
+              <% } else { %>
+                <div class="relative pl-4 border-l border-muted space-y-4 text-xs">
+                  <% approvalLogs.forEach(log=> { %>
+                    <div class="relative">
+                      <div
+                        class="absolute -left-[21px] mt-1 h-2 w-2 rounded-full border bg-background <%= log.status === 'approved' ? 'border-emerald-500 bg-emerald-500' : 'border-destructive bg-destructive' %>">
+                      </div>
+                      <div class="flex items-center justify-between font-medium">
+                        <span class="capitalize">
+                          <%= log.status==='approved' ? 'Disetujui' : 'Ditolak/Revisi' %>
+                        </span>
+                        <span class="text-[10px] text-muted-foreground">
+                          <%= new Date(log.action_date).toLocaleString('id-ID', { dateStyle: 'short' ,
+                            timeStyle: 'short' }) %>
+                        </span>
+                      </div>
+                      <p class="text-muted-foreground mt-0.5">Oleh: <%= log.approver_name %>
+                      </p>
+                      <% if (log.notes) { %>
+                        <div class="mt-1 p-2 bg-muted/60 rounded text-muted-foreground border italic">
+                          "<%= log.notes %>"
+                        </div>
+                        <% } %>
+                    </div>
+                    <% }) %>
+                </div>
+                <% } %>
+          </div>
+        </div>
+      </div>
+      <div id="rejectModal"
+        class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-fade-in">
+        <div
+          class="bg-background border rounded-lg shadow-lg w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-200">
+          <div class="p-4 border-b flex justify-between items-center bg-muted/20">
+            <h3 class="font-bold text-sm">Berikan Catatan Penolakan / Revisi</h3>
+            <button onclick="toggleModal('rejectModal')"
+              class="text-muted-foreground hover:text-foreground text-lg font-bold">&times;</button>
+          </div>
+          <form hx-post="/pimpinan/laporan/<%= laporan.id %>/tolak" class="p-4">
+            <div class="mb-4">
+              <label class="block text-xs font-semibold mb-1">Alasan Penolakan / Catatan Perbaikan <span
+                  class="text-destructive">*</span></label>
+              <textarea name="catatan_revisi" rows="4" class="textarea w-full text-sm p-2 border rounded"
+                placeholder="Tuliskan alasan penolakan secara jelas agar staf dapat merevisi data dengan benar..."
+                required></textarea>
+            </div>
+            <div class="flex justify-end gap-2 border-t pt-3">
+              <button type="button" onclick="toggleModal('rejectModal')" class="btn btn-sm btn-outline">Batal</button>
+              <button type="submit" class="btn btn-sm btn-destructive">Kirim Penolakan</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <script>
+        function toggleModal(modalId) {
+          const modal = document.getElementById(modalId);
+          if (modal) {
+            modal.classList.toggle('hidden');
+          }
+        }
+      </script>
 
     </main>
-  </body>
+</body>
+
 </html>

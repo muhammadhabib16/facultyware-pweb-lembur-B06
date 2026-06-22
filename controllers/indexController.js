@@ -25,7 +25,7 @@ const home = async (req, res, next) => {
 
     // Hitung berapa banyak tugas lembur yang berstatus menunggu verifikasi pimpinan ('completed')
     const [[{ pendingReview }]] = await db.query(
-      "SELECT COUNT(*) AS pendingReview FROM overtime_requests WHERE status = 'completed'",
+      "SELECT COUNT(*) AS pendingReview FROM overtime_requests WHERE status = 'waiting_approval'",
     );
 
     // Hitung berapa banyak total pengajuan lembur yang sudah sukses disetujui pimpinan ('approved')

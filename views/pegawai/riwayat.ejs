@@ -1,178 +1,104 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title><%= title %></title>
-  <link rel="stylesheet" href="/assets/styles.css">
+  <script>
+    (() => {
+      try {
+        const stored = localStorage.getItem("themeMode");
+        if (stored ? stored === "dark" : matchMedia("(prefers-color-scheme: dark)").matches) {
+          document.documentElement.classList.add("dark");
+        }
+      } catch (_) { }
+    })();
+  </script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>
+    <%= title %> — Facultyware
+  </title>
+  <link rel="stylesheet" href="/assets/styles.css" />
+  <script src="/assets/js/basecoat.js?v=0.3.11" defer></script>
+  <script src="https://unpkg.com/htmx.org@2.0.4"></script>
 </head>
 
-<body class="bg-background flex min-h-screen">
+<body class="bg-background flex min-h-screen text-foreground">
 
   <%- include('../partials/sidebar') %>
 
-  <main class="flex-1 p-8">
-
-    <div class="flex items-center justify-between mb-6">
+    <main class="flex-1 p-4 md:p-6 space-y-5 max-w-6xl mx-auto w-full" hx-boost="true">
       <div>
-        <h1 class="text-3xl font-bold">Riwayat Lembur</h1>
-        <p class="text-muted-foreground">
-          Daftar pengajuan lembur yang pernah dibuat.
-        </p>
+        <h1 class="text-2xl font-bold tracking-tight">
+          <%= title %>
+        </h1>
+        <p class="text-sm text-muted-foreground">Pantau status laporan lembur yang telah Anda kerjakan.</p>
       </div>
 
-      <a
-        href="/pegawai/export/pdf"
-        class="btn btn-primary"
-      >
-        Export PDF
-      </a>
-    </div>
+      <div class="card p-4 bg-background border rounded-lg shadow-sm">
+        <form hx-get="/pegawai/riwayat" hx-target="body" hx-swap="outerHTML" hx-push-url="true" class="flex gap-4">
+          <input type="text" name="search" placeholder="Cari judul tugas atau nomor referensi..."
+            value="<%= filters.search || '' %>" class="input flex-1" />
+          <button type="submit" class="btn btn-primary">Cari</button>
+        </form>
+      </div>
 
-    <div class="card p-6">
-
-      <table class="w-full">
-
-        <thead>
-          <tr class="border-b">
-            <th class="text-left py-3">No</th>
-            <th class="text-left py-3">Nomor Request</th>
-            <th class="text-left py-3">Agenda Lembur</th>
-            <th class="text-left py-3">Status</th>
-            <th class="text-left py-3">Aksi</th>
-          </tr>
-        </thead>
-
-        <tbody>
-
-          <% if (!riwayat || riwayat.length === 0) { %>
-
-            <tr>
-              <td colspan="5" class="py-6 text-center text-muted-foreground">
-                Belum ada riwayat lembur.
-              </td>
-            </tr>
-
-          <% } else { %>
-
-            <% riwayat.forEach((item, index) => { %>
-
+      <div class="card overflow-hidden border rounded-lg shadow-sm bg-background">
+        <div class="overflow-x-auto">
+          <table class="table w-full text-left border-collapse text-sm">
+            <thead class="bg-muted/50 font-medium text-muted-foreground">
               <tr class="border-b">
-
-                <td class="py-3">
-                  <%= index + 1 %>
-                </td>
-
-                <td class="py-3 font-mono text-sm">
-                  <%= item.request_number %>
-                </td>
-
-                <td class="py-3">
-                  <%= item.title %>
-                </td>
-
-                <td class="py-3">
-
-                  <% if (item.status === 'pending') { %>
-
-                    <span class="px-2 py-1 rounded bg-yellow-500 text-black text-sm">
-                      Pending
-                    </span>
-
-                  <% } else if (item.status === 'approved') { %>
-
-                    <span class="px-2 py-1 rounded bg-blue-600 text-white text-sm">
-                      Approved
-                    </span>
-
-                  <% } else if (item.status === 'completed') { %>
-
-                    <span class="px-2 py-1 rounded bg-green-600 text-white text-sm">
-                      Completed
-                    </span>
-
-                  <% } else if (item.status === 'waiting_approval') { %>
-
-                    <span class="px-2 py-1 rounded bg-orange-500 text-black text-sm">
-                      Waiting Approval
-                    </span>
-
-                  <% } else if (item.status === 'cancelled') { %>
-
-                    <span class="px-2 py-1 rounded bg-red-600 text-white text-sm">
-                      Cancelled
-                    </span>
-
-                  <% } else if (item.status === 'rejected') { %>
-
-                    <span class="px-2 py-1 rounded bg-red-700 text-white text-sm">
-                      Rejected
-                    </span>
-
-                  <% } else { %>
-
-                    <span class="px-2 py-1 rounded bg-gray-600 text-white text-sm">
-                      <%= item.status || '-' %>
-                    </span>
-
-                  <% } %>
-
-                </td>
-
-                <td class="py-3">
-
-                  <% if (item.status === 'pending') { %>
-
-                    <form
-                      action="/pegawai/permohonan/<%= item.id %>/batal"
-                      method="POST"
-                      onsubmit="return confirm('Yakin ingin membatalkan pengajuan ini?')"
-                    >
-                      <button
-                        type="submit"
-                        class="btn btn-sm btn-outline"
-                      >
-                        Batalkan
-                      </button>
-                    </form>
-
-                  <% } else if (item.status === 'completed') { %>
-
-                    <a
-                      href="/pegawai/laporan/<%= item.id %>"
-                      class="btn btn-sm btn-primary"
-                    >
-                      Isi Laporan
-                    </a>
-
-                  <% } else if (item.status === 'waiting_approval') { %>
-
-                    <button
-                      type="button"
-                      class="btn btn-sm btn-outline"
-                    >
-                      Detail
-                    </button>
-
-                  <% } else { %>
-
-                    <span>-</span>
-
-                  <% } %>
-
-                </td>
-
+                <th class="p-4">No. Referensi</th>
+                <th class="p-4">Agenda Kerja</th>
+                <th class="p-4">Tgl Pelaksanaan</th>
+                <th class="p-4 text-center">Status Laporan</th>
               </tr>
-
-            <% }) %>
-
-          <% } %>
-
-        </tbody>
-
-      </table>
-
-    </div>
-
-  </main>
-
+            </thead>
+            <tbody class="divide-y">
+              <% if (riwayat && riwayat.length> 0) { %>
+                <% riwayat.forEach(item=> { %>
+                  <tr class="hover:bg-muted/30 transition-colors">
+                    <td class="p-4 font-mono text-xs font-semibold text-primary">
+                      <%= item.request_number %>
+                    </td>
+                    <td class="p-4">
+                      <div class="font-medium max-w-[300px] truncate">
+                        <%= item.title %>
+                      </div>
+                      <div class="text-xs text-muted-foreground">
+                        <%= item.request_number.includes('ASSIGN') ? 'Penugasan Pimpinan' : 'Pengajuan Mandiri' %>
+                      </div>
+                    </td>
+                    <td class="p-4 text-xs">
+                      <%= new Date(item.request_date).toLocaleDateString('id-ID', { day: '2-digit' , month: 'short' ,
+                        year: 'numeric' }) %>
+                    </td>
+                    <td class="p-4 text-center">
+                      <span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold tracking-wide capitalize
+                        <%= item.status === 'approved' ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20' : 
+                            item.status === 'waiting_approval' ? 'bg-amber-500/10 text-amber-600 border border-amber-500/20' : 
+                            item.status === 'rejected' ? 'bg-destructive/10 text-destructive border border-destructive/20' : 
+                            'bg-muted text-muted-foreground border border-border' %>">
+                        <span class="w-1.5 h-1.5 rounded-full 
+                          <%= item.status === 'approved' ? 'bg-emerald-500' : 
+                              item.status === 'waiting_approval' ? 'bg-amber-500 animate-pulse' : 
+                              item.status === 'rejected' ? 'bg-destructive' : 
+                              'bg-muted-foreground' %>"></span>
+                        <%= item.status==='waiting_approval' ? 'Waiting Approval' : item.status %>
+                      </span>
+                    </td>
+                  </tr>
+                  <% }) %>
+                    <% } else { %>
+                      <tr>
+                        <td colspan="4" class="p-8 text-center text-muted-foreground">
+                          Belum ada riwayat lembur yang dilaporkan.
+                        </td>
+                      </tr>
+                      <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
 </body>
+
+</html>

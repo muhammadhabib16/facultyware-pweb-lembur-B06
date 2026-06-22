@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <script>
+      (() => {
+        try {
+          const stored = localStorage.getItem("themeMode");
+          if (stored ? stored === "dark" : matchMedia("(prefers-color-scheme: dark)").matches) {
+            document.documentElement.classList.add("dark");
+          }
+        } catch (_) {}
+      })();
+    </script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title><%= title %> — Facultyware</title>
+    <link rel="stylesheet" href="/assets/styles.css" />
+    <script src="/assets/js/basecoat.js?v=0.3.11" defer></script>
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+  </head>
+  <body class="bg-background flex min-h-screen text-foreground overflow-x-hidden">
+
+    <%- include('../partials/sidebar') %>
+
+    <main class="flex-1 p-8 md:p-10 space-y-6" hx-boost="true">
+      <div class="flex flex-col md:flex-row justify-between md:items-center gap-4">
+        <div>
+          <h1 class="text-2xl font-bold tracking-tight"><%= title %></h1>
+          <p class="text-sm text-muted-foreground">Monitor dan unduh rekapitulasi penugasan lembur pegawai.</p>
+        </div>
+        
+        <button onclick="window.location.href = '/admin/rekap/export' + window.location.search" class="btn bg-emerald-600 text-white hover:bg-emerald-700 border-none">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="mr-2" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
+          Unduh Data Excel
+        </button>
+      </div>
+
+      <div class="card p-4 bg-background border rounded-lg shadow-sm">
+        <form hx-get="/admin/rekap" hx-target="body" hx-swap="outerHTML" hx-push-url="true" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+          
+          <div class="space-y-1">
+            <label class="text-xs font-semibold text-muted-foreground">Dari Tanggal</label>
+            <input type="date" name="start_date" value="<%= filters.start_date %>" class="input w-full" onchange="this.form.dispatchEvent(new Event('submit', { cancelable: true }))" />
+          </div>
+          
+          <div class="space-y-1">
+            <label class="text-xs font-semibold text-muted-foreground">Sampai Tanggal</label>
+            <input type="date" name="end_date" value="<%= filters.end_date %>" class="input w-full" onchange="this.form.dispatchEvent(new Event('submit', { cancelable: true }))" />
+          </div>
+
+          <div class="space-y-1">
+            <label class="text-xs font-semibold text-muted-foreground">Divisi / Unit</label>
+            <select name="unit_id" class="input w-full" onchange="this.form.dispatchEvent(new Event('submit', { cancelable: true }))">
+              <option value="">Semua Divisi</option>
+              <% divisi.forEach(d => { %>
+                <option value="<%= d.id %>" <%= filters.unit_id == d.id ? 'selected' : '' %>><%= d.name %></option>
+              <% }) %>
+            </select>
+          </div>
+
+          <div>
+            <a href="/admin/rekap" class="btn btn-outline w-full cursor-pointer">Reset Filter</a>
+          </div>
+        </form>
+      </div>
+
+      <div class="card overflow-hidden border rounded-lg shadow-sm bg-background">
+        <div class="overflow-x-auto">
+          <table class="table w-full text-left border-collapse text-sm">
+            <thead class="bg-muted/50 font-medium text-muted-foreground">
+              <tr class="border-b">
+                <th class="p-4">No. Penugasan</th>
+                <th class="p-4">Pegawai</th>
+                <th class="p-4">Divisi/Unit</th>
+                <th class="p-4">Agenda</th>
+                <th class="p-4">Tanggal</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y">
+              <% if (laporan && laporan.length > 0) { %>
+                <% laporan.forEach(item => { %>
+                  <tr class="hover:bg-muted/30 transition-colors">
+                    <td class="p-4 font-mono text-xs font-semibold text-primary"><%= item.request_number %></td>
+                    <td class="p-4 font-medium"><%= item.pegawai_name %></td>
+                    <td class="p-4 text-muted-foreground"><%= item.unit_name || '-' %></td>
+                    <td class="p-4 max-w-[200px] truncate"><%= item.title %></td>
+                    <td class="p-4 text-xs"><%= new Date(item.request_date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) %></td>
+                  </tr>
+                <% }) %>
+              <% } else { %>
+                <tr>
+                  <td colspan="5" class="p-8 text-center text-muted-foreground">
+                    Tidak ada laporan lembur yang ditemukan pada periode ini.
+                  </td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>
