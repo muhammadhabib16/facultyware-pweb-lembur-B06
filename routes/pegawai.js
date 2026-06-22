@@ -11,19 +11,6 @@ router.use(isAuthenticated);
 router.get("/permohonan", pegawaiController.formPermohonan);
 router.post("/permohonan", pegawaiController.simpanPermohonan);
 
-<<<<<<< HEAD
-router.get("/riwayat/:id/detail", pegawaiController.detailRiwayat);
-router.get("/riwayat", pegawaiController.riwayatLembur);
-
-// Membatalkan Permohonan Lembur
-router.post("/riwayat/:id/batalkan", isAuthenticated, pegawaiController.batalkanPermohonan);
-
-router.get("/laporan/:id", isAuthenticated, pegawaiController.formLaporan);
-router.post("/laporan/:id", isAuthenticated, pegawaiController.simpanLaporan);
-
-// REST API Riwayat Lembur
-router.get("/api/riwayat", pegawaiController.apiRiwayatLembur);
-=======
 // Fitur 3: Batal permohonan mandiri (sebelum dilaporkan)
 router.post("/permohonan/:id/batal", pegawaiController.batalPermohonan);
 
@@ -43,7 +30,6 @@ router.post("/tugas/:id/lapor", pegawaiController.submitLaporan);
 
 // Fitur 4 & 8: Riwayat lembur (status waiting_approval, approved, rejected)
 router.get("/riwayat", pegawaiController.riwayatLembur);
->>>>>>> dev
 
 router.get(
   "/export/pdf",

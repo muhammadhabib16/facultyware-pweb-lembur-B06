@@ -89,11 +89,8 @@ exports.simpanPermohonan = async (req, res, next) => {
       planned_start_time,
       planned_end_time,
     } = req.body;
-<<<<<<< HEAD
-=======
     
     const employeeId = await getEmployeeId(req);
->>>>>>> dev
 
     const employeeId = getEmployeeId(req);
 
@@ -149,11 +146,6 @@ exports.simpanPermohonan = async (req, res, next) => {
     const requestNumber = `REQ-LEMBUR-${Date.now()}`;
 
     const [result] = await connection.query(
-<<<<<<< HEAD
-      `
-      INSERT INTO overtime_requests (
-        request_number,
-=======
       `INSERT INTO overtime_requests (
         request_number, title, description, request_date, 
         planned_start_time, planned_end_time, submitted_by, status,
@@ -161,37 +153,15 @@ exports.simpanPermohonan = async (req, res, next) => {
       ) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, NOW(), NOW())`,
       [
         requestNumber,
->>>>>>> dev
         title,
         description,
         request_date,
         planned_start_time,
         planned_end_time,
-<<<<<<< HEAD
-        submitted_by,
-        status,
-        submitted_by_id,
-        approved_by_id,
-        created_at,
-        updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, NOW(), NOW())
-      `,
-      [
-        requestNumber,
-        title,
-        description,
-        request_date,
-        startDateTime,
-        endDateTime,
-        employeeId,
-        employeeId,
-        approvedById,
-=======
         employeeId,    // submitted_by (int FK ke employees)
         employeeId,    // submitted_by_id (int FK ke employees)
         approvedById,  // approved_by (int FK ke employees — pimpinan)
         approvedById,  // approved_by_id
->>>>>>> dev
       ]
     );
 
@@ -224,16 +194,6 @@ exports.simpanPermohonan = async (req, res, next) => {
 
     await connection.commit();
 
-<<<<<<< HEAD
-    res.redirect("/pegawai/riwayat");
-  } catch (err) {
-    try {
-      await connection.rollback();
-    } catch (rollbackErr) {
-      console.error("rollback simpanPermohonan error:", rollbackErr);
-    }
-
-=======
     // Penanganan respon asinkron HTMX
     if (req.headers["hx-request"]) {
       return res.send(`
@@ -256,7 +216,6 @@ exports.simpanPermohonan = async (req, res, next) => {
         console.error("Gagal melakukan rollback:", rollbackErr);
       }
     }
->>>>>>> dev
     if (err.message === "PIMPINAN_NOT_FOUND") {
       return res.render("pegawai/permohonan", {
         title: "Ajukan Permohonan Lembur Mandiri",
@@ -273,86 +232,6 @@ exports.simpanPermohonan = async (req, res, next) => {
   }
 };
 
-<<<<<<< HEAD
-// GET /pegawai/riwayat
-exports.riwayatLembur = async (req, res) => {
-  try {
-    const employeeId = getEmployeeId(req);
-
-    if (!employeeId) {
-      return res.status(400).send("Profil pegawai belum tersedia.");
-    }
-
-    const [riwayat] = await db.query(
-      `
-      SELECT DISTINCT
-        or2.id,
-        or2.request_number,
-        or2.title,
-        or2.description,
-        or2.request_date,
-        or2.planned_start_time,
-        or2.planned_end_time,
-        or2.status,
-        or2.created_at
-      FROM overtime_requests or2
-      LEFT JOIN overtime_request_members orm
-        ON orm.overtime_request_id = or2.id
-      WHERE or2.submitted_by_id = ?
-         OR orm.employee_id = ?
-      ORDER BY or2.created_at DESC, or2.id DESC
-      `,
-      [employeeId, employeeId]
-    );
-
-    res.render("pegawai/riwayat", {
-      title: "Riwayat Lembur",
-      riwayat,
-      formatStatus,
-    });
-  } catch (err) {
-    console.error("riwayatLembur error:", err);
-    res.status(500).send("Terjadi kesalahan saat membuka riwayat lembur.");
-  }
-};
-
-// POST /pegawai/permohonan/:id/batal
-exports.batalkanPermohonan = async (req, res) => {
-  try {
-    const employeeId = getEmployeeId(req);
-    const requestId = req.params.id;
-
-    if (!employeeId) {
-      return res.status(400).send("Profil pegawai belum tersedia.");
-    }
-
-    await db.query(
-      `
-      UPDATE overtime_requests
-      SET status = 'cancelled',
-          updated_at = NOW()
-      WHERE id = ?
-        AND submitted_by_id = ?
-        AND status = 'pending'
-      `,
-      [requestId, employeeId]
-    );
-
-    res.redirect("/pegawai/riwayat");
-  } catch (err) {
-    console.error("batalkanPermohonan error:", err);
-    res.status(500).send("Gagal membatalkan permohonan.");
-  }
-};
-
-// Alias supaya aman kalau route lama pakai nama batalPermohonan
-exports.batalPermohonan = exports.batalkanPermohonan;
-
-// GET /pegawai/api/riwayat
-exports.apiRiwayatLembur = async (req, res) => {
-  try {
-    const employeeId = getEmployeeId(req);
-=======
 // ─────────────────────────────────────────────────────────────────────────────
 // FITUR 5 & 7: MELIHAT DAFTAR TUGAS AKTIF (GET /pegawai/tugas)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -930,7 +809,6 @@ exports.apiCariTugas = async (req, res) => {
 exports.apiRiwayatLembur = async (req, res) => {
   try {
     const employeeId = await getEmployeeId(req);
->>>>>>> dev
 
     if (!employeeId) {
       return res.status(400).json({
@@ -983,10 +861,6 @@ exports.formLaporan = async (req, res) => {
     const employeeId = getEmployeeId(req);
     const requestId = req.params.id;
 
-<<<<<<< HEAD
-    if (!employeeId) {
-      return res.status(400).send("Profil pegawai belum tersedia.");
-=======
     console.log("USER PDF:", req.user);
     console.log("SESSION USER:", req.user);
 
@@ -1004,7 +878,6 @@ exports.formLaporan = async (req, res) => {
 
         if (!employeeId) {
           return res.status(400).send("Profil pegawai belum tersedia.");
->>>>>>> dev
     }
 
     const [data] = await db.query(
@@ -1301,9 +1174,3 @@ exports.exportPdfRiwayat = async (req, res) => {
     res.status(500).send("Gagal membuat PDF.");
   }
 };
-<<<<<<< HEAD
-
-// Alias supaya aman kalau route pakai nama exportPdf
-exports.exportPdf = exports.exportPdfRiwayat;
-=======
->>>>>>> dev
