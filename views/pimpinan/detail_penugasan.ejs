@@ -65,24 +65,24 @@
 
       <%# Tombol aksi berdasarkan status %>
       <div class="flex flex-wrap items-center gap-2">
-        <% if (tugas.status === 'waiting_approval') { %>
+        <% if (tugas.status === 'waiting_approval' || tugas.status === 'pending') { %>
           <button onclick="document.getElementById('rejectModal').classList.remove('hidden')"
             class="btn btn-sm btn-outline border-destructive text-destructive hover:bg-destructive/10 cursor-pointer">
             <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
               <circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/>
             </svg>
-            Tolak / Minta Revisi
+            <%= tugas.status === 'pending' ? 'Tolak Permohonan' : 'Tolak / Minta Revisi' %>
           </button>
           <button
             hx-post="/pimpinan/penugasan/<%= tugas.id %>/approve"
-            hx-confirm="Apakah Anda yakin ingin menyetujui laporan realisasi kerja lembur ini?"
+            hx-confirm="<%= tugas.status === 'pending' ? 'Apakah Anda yakin ingin menyetujui permohonan lembur mandiri ini?' : 'Apakah Anda yakin ingin menyetujui laporan realisasi kerja lembur ini?' %>"
             class="btn btn-sm btn-primary cursor-pointer">
             <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
               <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
             </svg>
-            Konfirmasi Setuju
+            <%= tugas.status === 'pending' ? 'Setujui Permohonan' : 'Konfirmasi Setuju' %>
           </button>
         <% } %>
 
@@ -143,6 +143,17 @@
         <div>
           <p class="font-semibold text-sm">Penugasan ini ditolak / diminta revisi.</p>
           <p class="text-xs mt-0.5 opacity-80">Laporan realisasi dikembalikan kepada pegawai untuk diperbaiki.</p>
+        </div>
+      </div>
+    <% } else if (tugas.status === 'pending') { %>
+      <div class="flex items-center gap-3 p-4 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+        <div>
+          <p class="font-semibold text-sm">Permohonan lembur mandiri ini menunggu izin Anda.</p>
+          <p class="text-xs mt-0.5 opacity-80">Gunakan tombol <strong>Setujui Permohonan</strong> untuk memberikan izin lembur, atau <strong>Tolak Permohonan</strong> jika tidak diperbolehkan.</p>
         </div>
       </div>
     <% } else if (tugas.status === 'assigned') { %>
@@ -225,13 +236,13 @@
     <div id="rejectModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div class="bg-background border border-border rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
         <div class="p-4 border-b border-border flex justify-between items-center bg-muted/20">
-          <h3 class="font-bold text-sm">Tolak / Minta Revisi Laporan</h3>
+          <h3 class="font-bold text-sm"><%= tugas.status === 'pending' ? 'Tolak Permohonan Lembur' : 'Tolak / Minta Revisi Laporan' %></h3>
           <button onclick="document.getElementById('rejectModal').classList.add('hidden')"
             class="text-muted-foreground hover:text-foreground text-xl font-bold leading-none">&times;</button>
         </div>
         <form hx-post="/pimpinan/penugasan/<%= tugas.id %>/reject" class="p-5 space-y-4">
           <p class="text-sm text-muted-foreground">
-            Berikan catatan alasan penolakan yang jelas agar pegawai dapat memperbaiki laporan realisasinya.
+            <%= tugas.status === 'pending' ? 'Berikan catatan alasan penolakan permohonan lembur mandiri ini.' : 'Berikan catatan alasan penolakan yang jelas agar pegawai dapat memperbaiki laporan realisasinya.' %>
           </p>
           <div>
             <label for="catatan_revisi" class="block text-xs font-semibold mb-1.5">

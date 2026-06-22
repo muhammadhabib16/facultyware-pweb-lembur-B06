@@ -861,7 +861,7 @@ exports.formLaporan = async (req, res, next) => {
     const [[tugas]] = await db.query(
       `SELECT or2.* FROM overtime_requests or2
        JOIN overtime_request_members orm ON orm.overtime_request_id = or2.id
-       WHERE or2.id = ? AND orm.employee_id = ? AND or2.status IN('assigned', 'pending')`,
+       WHERE or2.id = ? AND orm.employee_id = ? AND or2.status IN('assigned', 'rejected')`,
       [id, employeeId],
     );
 
@@ -907,7 +907,7 @@ exports.submitLaporan = async (req, res, next) => {
     const [[tugas]] = await connection.query(
       `SELECT or2.id FROM overtime_requests or2
        JOIN overtime_request_members orm ON orm.overtime_request_id = or2.id
-       WHERE or2.id = ? AND orm.employee_id = ? AND or2.status IN('assigned', 'pending')`,
+       WHERE or2.id = ? AND orm.employee_id = ? AND or2.status IN('assigned', 'rejected')`,
       [id, employeeId],
     );
 

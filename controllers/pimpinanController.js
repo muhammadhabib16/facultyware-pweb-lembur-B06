@@ -120,8 +120,9 @@ exports.simpanPenugasan = async (req, res, next) => {
 exports.listPenugasan = async (req, res, next) => {
   try {
     const { search } = req.query;
-    let whereClause = `WHERE or2.request_number LIKE 'REQ-ASSIGN-%'`; // Ambil khusus yang dibuat oleh pimpinan
-    const params = [];
+    const pimpinanId = req.user.employee_id;
+    let whereClause = `WHERE or2.approved_by_id = ?`;
+    const params = [pimpinanId];
 
     if (search) {
       whereClause += ` AND (or2.title LIKE ? OR or2.request_number LIKE ? OR e.name LIKE ?)`;
@@ -423,7 +424,7 @@ exports.approvePenugasan = async (req, res, next) => {
 
     // Ambil data penugasan untuk validasi
     const [[tugas]] = await connection.query(
-      "SELECT id, status, title FROM overtime_requests WHERE id = ? AND request_number LIKE 'REQ-ASSIGN-%'",
+      "SELECT id, status, title FROM overtime_requests WHERE id = ?",
       [id]
     );
 
@@ -433,29 +434,31 @@ exports.approvePenugasan = async (req, res, next) => {
       );
     }
 
-    // Hanya bisa approve jika status waiting_approval
-    if (tugas.status !== 'waiting_approval') {
+    // Bisa approve jika status waiting_approval atau pending
+    if (tugas.status !== 'waiting_approval' && tugas.status !== 'pending') {
       return res.status(400).send(
-        '<div class="text-amber-600 text-sm p-4">Penugasan ini tidak dalam status menunggu persetujuan.</div>'
+        '<div class="text-amber-600 text-sm p-4">Penugasan ini tidak dalam status menunggu persetujuan atau izin.</div>'
       );
     }
 
     await connection.beginTransaction();
 
-    // Update status penugasan menjadi approved
+    const targetStatus = tugas.status === 'pending' ? 'assigned' : 'approved';
+
+    // Update status penugasan
     await connection.query(
       `UPDATE overtime_requests 
-       SET status = 'approved', approved_by = ?, approved_by_id = ?, approved_at = NOW(), updated_at = NOW() 
+       SET status = ?, approved_by = ?, approved_by_id = ?, approved_at = NOW(), updated_at = NOW() 
        WHERE id = ?`,
-      [approverId, approverId, id]
+      [targetStatus, approverId, approverId, id]
     );
 
     // Catat log persetujuan ke tabel overtime_approval_logs jika ada
     try {
       await connection.query(
         `INSERT INTO overtime_approval_logs (overtime_request_id, approver_id, status, notes, action_date, created_at) 
-         VALUES (?, ?, 'approved', NULL, NOW(), NOW())`,
-        [id, approverId]
+         VALUES (?, ?, ?, NULL, NOW(), NOW())`,
+        [id, approverId, targetStatus]
       );
     } catch (logErr) {
       // Jika tabel log tidak ada, lanjutkan tanpa error
@@ -499,7 +502,7 @@ exports.rejectPenugasan = async (req, res, next) => {
 
     // Ambil data penugasan untuk validasi
     const [[tugas]] = await connection.query(
-      "SELECT id, status FROM overtime_requests WHERE id = ? AND request_number LIKE 'REQ-ASSIGN-%'",
+      "SELECT id, status FROM overtime_requests WHERE id = ?",
       [id]
     );
 
@@ -509,9 +512,9 @@ exports.rejectPenugasan = async (req, res, next) => {
       );
     }
 
-    if (tugas.status !== 'waiting_approval') {
+    if (tugas.status !== 'waiting_approval' && tugas.status !== 'pending') {
       return res.status(400).send(
-        '<div class="text-amber-600 text-sm p-4">Penugasan ini tidak dalam status menunggu persetujuan.</div>'
+        '<div class="text-amber-600 text-sm p-4">Penugasan ini tidak dalam status menunggu persetujuan atau izin.</div>'
       );
     }
 
