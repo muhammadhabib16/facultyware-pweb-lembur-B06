@@ -426,6 +426,101 @@ input[type="date"]:focus,
 input[type="datetime-local"]:focus,
 select:focus,
 textarea:focus {
-  border-color: #10B981 !important;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
+  border-color: #059669 !important;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15) !important;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   MODERN EMERALD & MINT SAAS DESIGN SYSTEM OVERRIDES (CUSTOM)
+   ───────────────────────────────────────────────────────────────────────────── */
+
+:root {
+  --sidebar-bg: #062f24 !important;
+  --sidebar-active-bg: linear-gradient(135deg, #059669, #047857) !important;
+  --sidebar-active-text: #ffffff !important;
+  --sidebar-text: #98ddbf !important;
+  --page-bg: #f4fbf7 !important;
+  --card-bg: #ffffff !important;
+  --table-header-bg: #e6f7ef !important;
+  --table-header-text: #047857 !important;
+  --table-border: rgba(4, 120, 87, 0.12) !important;
+}
+
+body {
+  background-image: linear-gradient(180deg, #eefdf6 0%, #f4fbf7 30%, #ffffff 100%) !important;
+  background-attachment: fixed !important;
+  background-repeat: no-repeat !important;
+  background-color: #f4fbf7 !important;
+  color: #062f24 !important;
+}
+
+/* Heading colors */
+h1, h2, h3, h4, h5, h6,
+h1[style*="color: #000"],
+h2[style*="color: #000"],
+h3[style*="color: #000"],
+h1[style*="color: black"],
+h2[style*="color: black"],
+h3[style*="color: black"],
+main h1,
+main h2,
+main h3 {
+  color: #062f24 !important;
+  font-weight: 800 !important;
+}
+
+/* Modern Glassmorphism Cards */
+.card, [data-slot="card"], .dash-card {
+  background: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(4, 120, 87, 0.12) !important;
+  border-radius: 1.25rem !important;
+  padding: 2rem !important;
+  box-shadow: 0 10px 30px -10px rgba(6, 47, 36, 0.04), 0 1px 3px 0 rgba(6, 47, 36, 0.01) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.card:hover, [data-slot="card"]:hover, .dash-card:hover {
+  transform: translateY(-4px) !important;
+  border-color: rgba(5, 150, 105, 0.3) !important;
+  box-shadow: 0 20px 40px -15px rgba(5, 150, 105, 0.12) !important;
+}
+
+/* High Contrast Buttons */
+.btn-action-detail,
+.btn-primary,
+button[type="submit"]:not(.sidebar-logout-btn) {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  border: 1px solid #047857 !important;
+  box-shadow: 0 4px 14px rgba(4, 120, 87, 0.25) !important;
+  border-radius: 0.75rem !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+.btn-action-detail:hover,
+.btn-primary:hover,
+button[type="submit"]:not(.sidebar-logout-btn):hover {
+  background: linear-gradient(135deg, #047857 0%, #065f46 100%) !important;
+  box-shadow: 0 6px 20px rgba(4, 120, 87, 0.35) !important;
+  transform: translateY(-2px) !important;
+}
+
+.btn-action-cancel,
+.btn-destructive {
+  background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%) !important;
+  color: #ffffff !important;
+  border: 1px solid #e11d48 !important;
+  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.25) !important;
+  border-radius: 0.75rem !important;
+}
+
+.btn-action-cancel:hover,
+.btn-destructive:hover {
+  background: linear-gradient(135deg, #e11d48 0%, #be123c 100%) !important;
+  box-shadow: 0 6px 20px rgba(225, 29, 72, 0.35) !important;
+  transform: translateY(-2px) !important;
+}
+

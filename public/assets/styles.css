@@ -6306,3 +6306,334 @@ code.hljs {
     }
   }
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   MODERN EMERALD & MINT SAAS DESIGN SYSTEM OVERRIDES
+   ───────────────────────────────────────────────────────────────────────────── */
+
+:root {
+  --radius: 0.875rem !important;
+  --background: #f4fbf7 !important;
+  --foreground: #062f24 !important;
+  
+  --card: #ffffff !important;
+  --card-foreground: #062f24 !important;
+  
+  --popover: #ffffff !important;
+  --popover-foreground: #062f24 !important;
+  
+  --primary: #059669 !important;
+  --primary-foreground: #ffffff !important;
+  
+  --secondary: #e6f7ef !important;
+  --secondary-foreground: #047857 !important;
+  
+  --muted: #e6f7ef !important;
+  --muted-foreground: #4a6b5d !important;
+  
+  --accent: #e6f7ef !important;
+  --accent-foreground: #047857 !important;
+  
+  --destructive: #e11d48 !important;
+  --destructive-foreground: #ffffff !important;
+  
+  --border: rgba(4, 120, 87, 0.12) !important;
+  --input: rgba(4, 120, 87, 0.16) !important;
+  --ring: #10b981 !important;
+}
+
+/* 1. Global Page Background Gradient & Typography */
+body {
+  background-image: linear-gradient(180deg, #eefdf6 0%, #f4fbf7 30%, #ffffff 100%) !important;
+  background-attachment: fixed !important;
+  background-repeat: no-repeat !important;
+  background-color: #f4fbf7 !important;
+  color: #062f24 !important;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 2. Global Headings & Typography */
+h1, h2, h3, h4, h5, h6 {
+  color: #062f24 !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.025em !important;
+}
+
+.text-foreground {
+  color: #062f24 !important;
+}
+
+.text-muted-foreground {
+  color: #4a6b5d !important;
+}
+
+/* 3. Spacing & Spreading Overrides (Lega & Tidak Menempel) */
+main.flex-1 {
+  padding: 3rem 2rem !important;
+  max-width: 80rem !important;
+  gap: 2rem !important;
+}
+
+@media (max-width: 768px) {
+  main.flex-1 {
+    padding: 1.5rem 1rem !important;
+  }
+}
+
+/* Override Tailwind margins to ensure items are spaced apart */
+.space-y-6 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 2rem !important;
+}
+.space-y-5 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 1.75rem !important;
+}
+.space-y-4 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 1.5rem !important;
+}
+.grid {
+  gap: 1.75rem !important;
+}
+
+/* 4. Modern Glassmorphism Cards */
+.card, [data-slot="card"], .dash-card {
+  background: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(4, 120, 87, 0.12) !important;
+  border-radius: 1.25rem !important;
+  padding: 2rem !important;
+  box-shadow: 0 10px 30px -10px rgba(6, 47, 36, 0.04), 0 1px 3px 0 rgba(6, 47, 36, 0.01) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.card:hover, [data-slot="card"]:hover, .dash-card:hover {
+  transform: translateY(-4px) !important;
+  border-color: rgba(5, 150, 105, 0.3) !important;
+  box-shadow: 0 20px 40px -15px rgba(5, 150, 105, 0.12) !important;
+}
+
+/* Stat Cards Value */
+[data-slot="card"] span.text-5xl, .dash-card-value {
+  font-size: 3rem !important;
+  font-weight: 900 !important;
+  color: #062f24 !important;
+  letter-spacing: -0.04em !important;
+}
+
+/* 5. Contrast & Modern Buttons */
+.btn, 
+.btn-primary, 
+.btn-secondary, 
+.btn-outline,
+.btn-destructive,
+button[type="submit"]:not(.sidebar-logout-btn),
+a.btn,
+a.btn-primary {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-weight: 700 !important;
+  font-size: 0.875rem !important;
+  padding: 0.875rem 1.75rem !important;
+  border-radius: 0.75rem !important;
+  transition: all 0.2s ease-in-out !important;
+  cursor: pointer !important;
+  gap: 0.5rem !important;
+}
+
+/* Primary Button - High Contrast Emerald */
+.btn-primary,
+.btn[data-slot="button"][class*="primary"],
+button[type="submit"]:not(.sidebar-logout-btn),
+a.btn-primary {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+  color: #ffffff !important;
+  border: 1px solid #047857 !important;
+  box-shadow: 0 4px 14px rgba(4, 120, 87, 0.25) !important;
+}
+
+.btn-primary:hover,
+.btn[data-slot="button"][class*="primary"]:hover,
+button[type="submit"]:not(.sidebar-logout-btn):hover,
+a.btn-primary:hover {
+  background: linear-gradient(135deg, #047857 0%, #065f46 100%) !important;
+  box-shadow: 0 6px 20px rgba(4, 120, 87, 0.35) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Secondary & Outline Buttons */
+.btn-secondary,
+.btn-outline,
+.btn[data-slot="button"]:not([class*="primary"]):not([class*="destructive"]):not(.sidebar-logout-btn),
+a.btn:not(.btn-primary):not(.btn-destructive) {
+  background-color: #ffffff !important;
+  color: #047857 !important;
+  border: 1px solid rgba(4, 120, 87, 0.25) !important;
+  box-shadow: 0 2px 4px rgba(6, 47, 36, 0.02) !important;
+}
+
+.btn-secondary:hover,
+.btn-outline:hover,
+.btn[data-slot="button"]:not([class*="primary"]):not([class*="destructive"]):not(.sidebar-logout-btn):hover,
+a.btn:not(.btn-primary):not(.btn-destructive):hover {
+  background-color: #e6f7ef !important;
+  color: #065f46 !important;
+  border-color: #059669 !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Destructive Button */
+.btn-destructive,
+.btn[class*="destructive"] {
+  background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%) !important;
+  color: #ffffff !important;
+  border: 1px solid #e11d48 !important;
+  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.25) !important;
+}
+
+.btn-destructive:hover,
+.btn[class*="destructive"]:hover {
+  background: linear-gradient(135deg, #e11d48 0%, #be123c 100%) !important;
+  box-shadow: 0 6px 20px rgba(225, 29, 72, 0.35) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* 6. Modern Tables */
+table, .custom-table {
+  width: 100% !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  border-radius: 0.875rem !important;
+  overflow: hidden !important;
+}
+
+thead, .custom-table th {
+  background-color: #e6f7ef !important;
+}
+
+th {
+  color: #047857 !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.075em !important;
+  font-size: 0.75rem !important;
+  padding: 1.125rem 1.25rem !important;
+  border-bottom: 2px solid rgba(4, 120, 87, 0.15) !important;
+}
+
+td {
+  padding: 1.125rem 1.25rem !important;
+  font-size: 0.875rem !important;
+  border-bottom: 1px solid rgba(4, 120, 87, 0.08) !important;
+  background-color: #ffffff !important;
+  color: #062f24 !important;
+}
+
+tr:hover td {
+  background-color: #f7fdfa !important;
+}
+
+/* 7. Forms & Inputs */
+input[type="text"], 
+input[type="email"], 
+input[type="password"], 
+input[type="date"], 
+input[type="datetime-local"], 
+select, 
+textarea,
+.input {
+  background-color: #ffffff !important;
+  border: 1px solid rgba(4, 120, 87, 0.2) !important;
+  color: #062f24 !important;
+  border-radius: 0.75rem !important;
+  padding: 0.75rem 1rem !important;
+  font-size: 0.875rem !important;
+  outline: none !important;
+  box-shadow: 0 1px 2px rgba(6, 47, 36, 0.02) !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+input[type="text"]:focus, 
+input[type="email"]:focus, 
+input[type="password"]:focus, 
+input[type="date"]:focus, 
+input[type="datetime-local"]:focus, 
+select:focus, 
+textarea:focus,
+.input:focus {
+  border-color: #059669 !important;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15) !important;
+}
+
+/* 8. Modern Status Badges */
+.status-badge,
+span[class*="bg-emerald-500/10"],
+span[class*="bg-amber-500/10"],
+span[class*="bg-destructive/10"],
+span[class*="bg-emerald-500/15"] {
+  padding: 0.375rem 0.875rem !important;
+  border-radius: 9999px !important;
+  font-weight: 700 !important;
+  font-size: 0.75rem !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.375rem !important;
+  border-width: 1px !important;
+}
+
+span[class*="bg-emerald-500/10"], span[class*="bg-emerald-500/15"] {
+  background-color: #d1fae5 !important;
+  color: #065f46 !important;
+  border-color: #a7f3d0 !important;
+}
+
+span[class*="bg-amber-500/10"] {
+  background-color: #fef3c7 !important;
+  color: #92400e !important;
+  border-color: #fde68a !important;
+}
+
+span[class*="bg-destructive/10"] {
+  background-color: #fee2e2 !important;
+  color: #991b1b !important;
+  border-color: #fca5a5 !important;
+}
+
+/* 9. Modern Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(5, 150, 105, 0.2);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(5, 150, 105, 0.4);
+}
+
+/* 10. Login Page Premium Enhancements */
+body.login-page-body {
+  background-image: linear-gradient(135deg, rgba(238, 253, 246, 0.88) 0%, rgba(244, 251, 247, 0.94) 100%), url('/assets/images/gedung_unand.jpg') !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-attachment: fixed !important;
+  background-repeat: no-repeat !important;
+}
+
+.login-right-panel {
+  background: linear-gradient(135deg, rgba(2, 44, 34, 0.82) 0%, rgba(15, 23, 42, 0.88) 100%), url('/assets/images/gedung_unand.jpg') !important;
+  background-size: cover !important;
+  background-position: center !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+}
+
+
