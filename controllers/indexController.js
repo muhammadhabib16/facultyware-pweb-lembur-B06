@@ -124,11 +124,18 @@ const login = async (req, res, next) => {
 
     const userRole = roles.length > 0 ? roles[0].name : null;
 
+    // Cari employee yang terhubung dengan user ini
+    const [employees] = await db.query(
+      "SELECT id FROM employees WHERE user_id = ? LIMIT 1",
+      [user.id]
+    );
+    const employeeId = employees.length > 0 ? employees[0].id : null;
 
     req.session.userId = user.id;
     req.session.name = user.name;
     req.session.email = user.email;
     req.session.role = userRole;
+    req.session.employeeId = employeeId; // Simpan langsung ke session
 
     if (req.headers["hx-request"]) {
       res.setHeader("HX-Redirect", "/home");

@@ -5,10 +5,17 @@ const PDFDocument = require("pdfkit");
 const getEmployeeId = async (req) => {
   const userId = req.session?.userId;
   if (!userId) return null;
-  const [rows] = await db.query("SELECT id FROM employees WHERE id = ?", [
+  // Cari berdasarkan user_id (relasi langsung users → employees)
+  const [rows] = await db.query("SELECT id FROM employees WHERE user_id = ?", [
     userId,
   ]);
-  return rows.length > 0 ? rows[0].id : null;
+  if (rows.length > 0) return rows[0].id;
+  // Fallback: cari berdasarkan nama (untuk data lama yang belum punya user_id)
+  if (req.session?.name) {
+    const [byName] = await db.query("SELECT id FROM employees WHERE name = ? LIMIT 1", [req.session.name]);
+    if (byName.length > 0) return byName[0].id;
+  }
+  return null;
 };
 
 // Helper ubah input tanggal/waktu jadi format MySQL DATETIME
@@ -309,8 +316,13 @@ exports.listTugas = async (req, res, next) => {
     }
 
     const keyword = req.query.keyword || "";
+    // Query mengambil tugas dari dua sumber:
+    // 1. Penugasan dari pimpinan (request_number LIKE 'REQ-ASSIGN-%')
+    //    → diidentifikasi via overtime_request_members.employee_id = employeeId
+    // 2. Permohonan mandiri pegawai (request_number LIKE 'REQ-LEMBUR-%')
+    //    → diidentifikasi via overtime_requests.submitted_by = employeeId
     let query = `
-      SELECT 
+      SELECT DISTINCT
         or2.id,
         or2.request_number,
         or2.title,

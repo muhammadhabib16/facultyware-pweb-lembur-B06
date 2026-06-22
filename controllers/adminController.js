@@ -302,15 +302,16 @@ exports.simpanPegawai = async (req, res, next) => {
       [role_id, userId]
     );
 
-    // 4. Simpan ke tabel 'employees'
+    // 4. Simpan ke tabel 'employees' (sertakan user_id untuk relasi langsung)
     await connection.query(
       `INSERT INTO employees (
-        employee_number, national_id_number, tax_id_number, name, 
+        user_id, employee_number, national_id_number, tax_id_number, name, 
         birth_place, birth_date, gender, religion, marital_status, 
         address, phone_number, organization_unit_id, hire_date, 
         employment_status_id, status, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
       [
+        userId,           // user_id — relasi langsung ke tabel users
         employee_number,
         national_id_number || null,
         tax_id_number || null,

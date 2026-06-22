@@ -410,3 +410,145 @@ exports.apiStatusPenugasan = async (req, res) => {
     res.status(500).json({ status: "error", message: err.message });
   }
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// APPROVE PENUGASAN: Pimpinan menyetujui laporan realisasi kerja pegawai
+// POST /pimpinan/penugasan/:id/approve
+// ─────────────────────────────────────────────────────────────────────────────
+exports.approvePenugasan = async (req, res, next) => {
+  const connection = await db.getConnection();
+  try {
+    const { id } = req.params;
+    const approverId = req.user.employee_id;
+
+    // Ambil data penugasan untuk validasi
+    const [[tugas]] = await connection.query(
+      "SELECT id, status, title FROM overtime_requests WHERE id = ? AND request_number LIKE 'REQ-ASSIGN-%'",
+      [id]
+    );
+
+    if (!tugas) {
+      return res.status(404).send(
+        '<div class="text-destructive text-sm p-4">Data penugasan tidak ditemukan.</div>'
+      );
+    }
+
+    // Hanya bisa approve jika status waiting_approval
+    if (tugas.status !== 'waiting_approval') {
+      return res.status(400).send(
+        '<div class="text-amber-600 text-sm p-4">Penugasan ini tidak dalam status menunggu persetujuan.</div>'
+      );
+    }
+
+    await connection.beginTransaction();
+
+    // Update status penugasan menjadi approved
+    await connection.query(
+      `UPDATE overtime_requests 
+       SET status = 'approved', approved_by = ?, approved_by_id = ?, approved_at = NOW(), updated_at = NOW() 
+       WHERE id = ?`,
+      [approverId, approverId, id]
+    );
+
+    // Catat log persetujuan ke tabel overtime_approval_logs jika ada
+    try {
+      await connection.query(
+        `INSERT INTO overtime_approval_logs (overtime_request_id, approver_id, status, notes, action_date, created_at) 
+         VALUES (?, ?, 'approved', NULL, NOW(), NOW())`,
+        [id, approverId]
+      );
+    } catch (logErr) {
+      // Jika tabel log tidak ada, lanjutkan tanpa error
+      console.warn('overtime_approval_logs insert skipped:', logErr.message);
+    }
+
+    await connection.commit();
+
+    // Redirect kembali ke detail penugasan dengan flash
+    if (req.headers['hx-request']) {
+      res.set('HX-Redirect', `/pimpinan/penugasan/${id}`);
+      return res.sendStatus(204);
+    }
+
+    res.redirect(`/pimpinan/penugasan/${id}`);
+  } catch (err) {
+    await connection.rollback();
+    console.error('approvePenugasan error:', err);
+    next(err);
+  } finally {
+    connection.release();
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// REJECT PENUGASAN: Pimpinan menolak / meminta revisi laporan realisasi kerja
+// POST /pimpinan/penugasan/:id/reject
+// ─────────────────────────────────────────────────────────────────────────────
+exports.rejectPenugasan = async (req, res, next) => {
+  const connection = await db.getConnection();
+  try {
+    const { id } = req.params;
+    const { catatan_revisi } = req.body;
+    const approverId = req.user.employee_id;
+
+    if (!catatan_revisi || catatan_revisi.trim() === '') {
+      return res.status(400).send(
+        '<div class="text-destructive text-sm p-4">Catatan alasan penolakan wajib diisi.</div>'
+      );
+    }
+
+    // Ambil data penugasan untuk validasi
+    const [[tugas]] = await connection.query(
+      "SELECT id, status FROM overtime_requests WHERE id = ? AND request_number LIKE 'REQ-ASSIGN-%'",
+      [id]
+    );
+
+    if (!tugas) {
+      return res.status(404).send(
+        '<div class="text-destructive text-sm p-4">Data penugasan tidak ditemukan.</div>'
+      );
+    }
+
+    if (tugas.status !== 'waiting_approval') {
+      return res.status(400).send(
+        '<div class="text-amber-600 text-sm p-4">Penugasan ini tidak dalam status menunggu persetujuan.</div>'
+      );
+    }
+
+    await connection.beginTransaction();
+
+    // Update status penugasan menjadi rejected, kembalikan ke assigned agar pegawai bisa revisi
+    await connection.query(
+      `UPDATE overtime_requests 
+       SET status = 'rejected', approved_by = ?, approved_by_id = ?, updated_at = NOW() 
+       WHERE id = ?`,
+      [approverId, approverId, id]
+    );
+
+    // Catat log penolakan
+    try {
+      await connection.query(
+        `INSERT INTO overtime_approval_logs (overtime_request_id, approver_id, status, notes, action_date, created_at) 
+         VALUES (?, ?, 'rejected', ?, NOW(), NOW())`,
+        [id, approverId, catatan_revisi.trim()]
+      );
+    } catch (logErr) {
+      console.warn('overtime_approval_logs insert skipped:', logErr.message);
+    }
+
+    await connection.commit();
+
+    if (req.headers['hx-request']) {
+      res.set('HX-Redirect', `/pimpinan/penugasan/${id}`);
+      return res.sendStatus(204);
+    }
+
+    res.redirect(`/pimpinan/penugasan/${id}`);
+  } catch (err) {
+    await connection.rollback();
+    console.error('rejectPenugasan error:', err);
+    next(err);
+  } finally {
+    connection.release();
+  }
+};

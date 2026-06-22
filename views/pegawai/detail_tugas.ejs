@@ -1,39 +1,256 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <script>
+    (() => {
+      try {
+        const stored = localStorage.getItem("themeMode");
+        if (stored ? stored === "dark" : matchMedia("(prefers-color-scheme: dark)").matches) {
+          document.documentElement.classList.add("dark");
+        }
+      } catch (_) { }
+    })();
+  </script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title><%= title %> — Facultyware</title>
+  <link rel="stylesheet" href="/assets/styles.css" />
+  <script src="/assets/js/basecoat.js?v=0.3.11" defer></script>
+  <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+</head>
+
+<body class="bg-background flex min-h-screen text-foreground overflow-x-hidden">
+
   <%- include('../partials/sidebar') %>
 
-  <div class="p-6">
-    <h1 class="text-2xl font-bold mb-6">
-      Detail Penugasan Lembur
-    </h1>
+  <main class="flex-1 p-4 md:p-6 space-y-5 max-w-4xl mx-auto w-full" hx-boost="true">
 
-    <div class="card p-6 space-y-4">
+    <%
+      var statusBadge = '';
+      var statusDot = '';
+      if (tugas.status === 'assigned') {
+        statusBadge = 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/20';
+        statusDot = 'bg-blue-500';
+      } else if (tugas.status === 'waiting_approval') {
+        statusBadge = 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/20';
+        statusDot = 'bg-amber-500 animate-pulse';
+      } else if (tugas.status === 'approved') {
+        statusBadge = 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20';
+        statusDot = 'bg-emerald-500';
+      } else if (tugas.status === 'rejected') {
+        statusBadge = 'bg-destructive/15 text-destructive border-destructive/20';
+        statusDot = 'bg-destructive';
+      } else if (tugas.status === 'pending') {
+        statusBadge = 'bg-slate-500/15 text-slate-600 dark:text-slate-400 border-slate-500/20';
+        statusDot = 'bg-slate-500';
+      } else {
+        statusBadge = 'bg-muted text-muted-foreground border-border';
+        statusDot = 'bg-muted-foreground';
+      }
+    %>
 
-      <div>
-        <strong>Nomor Permintaan</strong>
-        <p><%= tugas.request_number %></p>
+    <%# Header + Tombol Aksi %>
+    <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div class="flex items-center gap-3">
+        <a href="/pegawai/tugas" class="btn btn-sm btn-outline cursor-pointer">← Kembali</a>
+        <div>
+          <h1 class="text-xl font-bold tracking-tight">Detail Penugasan Lembur</h1>
+          <p class="text-xs text-muted-foreground font-mono"><%= tugas.request_number %></p>
+        </div>
       </div>
 
-      <div>
-        <strong>Agenda Lembur</strong>
-        <p><%= tugas.title %></p>
+      <%# Tombol Isi Laporan — hanya muncul jika status assigned atau rejected (perlu revisi) %>
+      <div class="flex gap-2">
+        <% if (tugas.status === 'assigned' || tugas.status === 'rejected') { %>
+          <a href="/pegawai/tugas/<%= tugas.id %>/lapor"
+            class="btn btn-primary flex items-center gap-2 cursor-pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/>
+            </svg>
+            <%= tugas.status === 'rejected' ? 'Revisi & Kirim Ulang' : 'Isi Laporan Realisasi' %>
+          </a>
+        <% } %>
+        <% if (tugas.status === 'pending') { %>
+          <form hx-post="/pegawai/permohonan/<%= tugas.id %>/batal" hx-confirm="Yakin ingin membatalkan permohonan ini?">
+            <button type="submit" class="btn btn-sm btn-outline border-destructive text-destructive hover:bg-destructive/10">
+              Batalkan Permohonan
+            </button>
+          </form>
+        <% } %>
       </div>
-
-      <div>
-        <strong>Tanggal Pengajuan</strong>
-        <p>
-          <%= new Date(tugas.request_date)
-          .toLocaleDateString('id-ID') %>
-        </p>
-      </div>
-
-      <div>
-        <strong>Status</strong>
-        <p><%= tugas.status %></p>
-      </div>
-
-      <div>
-        <strong>Deskripsi</strong>
-        <p><%= tugas.description || '-' %></p>
-      </div>
-
     </div>
-  </div>
+
+    <%# Banner status %>
+    <% if (tugas.status === 'assigned') { %>
+      <div class="flex items-center gap-3 p-4 rounded-xl border border-blue-500/30 bg-blue-500/10 text-blue-700 dark:text-blue-400">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+        </svg>
+        <div>
+          <p class="font-semibold text-sm">Anda mendapat penugasan lembur dari pimpinan.</p>
+          <p class="text-xs mt-0.5 opacity-80">Setelah melaksanakan lembur, klik <strong>"Isi Laporan Realisasi"</strong> untuk melaporkan jam kerja aktual Anda.</p>
+        </div>
+      </div>
+    <% } else if (tugas.status === 'waiting_approval') { %>
+      <div class="flex items-center gap-3 p-4 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+        <div>
+          <p class="font-semibold text-sm">Laporan sudah dikirim, menunggu persetujuan pimpinan.</p>
+          <p class="text-xs mt-0.5 opacity-80">Pimpinan akan memeriksa laporan realisasi Anda dan memberikan keputusan.</p>
+        </div>
+      </div>
+    <% } else if (tugas.status === 'approved') { %>
+      <div class="flex items-center gap-3 p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+        <div>
+          <p class="font-semibold text-sm">Laporan lembur Anda telah disetujui pimpinan.</p>
+          <p class="text-xs mt-0.5 opacity-80">Selamat, proses pengajuan lembur ini telah selesai.</p>
+        </div>
+      </div>
+    <% } else if (tugas.status === 'rejected') { %>
+      <div class="flex items-center gap-3 p-4 rounded-xl border border-destructive/30 bg-destructive/10 text-destructive">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0">
+          <circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/>
+        </svg>
+        <div>
+          <p class="font-semibold text-sm">Laporan Anda ditolak / diminta revisi oleh pimpinan.</p>
+          <p class="text-xs mt-0.5 opacity-80">Periksa catatan di bawah, lalu klik <strong>"Revisi & Kirim Ulang"</strong> untuk memperbaiki laporan.</p>
+        </div>
+      </div>
+    <% } %>
+
+    <%# Konten utama %>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+      <%# Detail tugas (kolom lebar) %>
+      <div data-slot="card" class="rounded-xl border bg-card p-6 md:col-span-2 space-y-5">
+        <h2 class="font-bold text-sm text-muted-foreground uppercase tracking-wider border-b border-border/50 pb-2">
+          Info Penugasan
+        </h2>
+
+        <div>
+          <span class="text-xs text-muted-foreground block">Judul Agenda Lembur</span>
+          <p class="font-bold text-lg mt-0.5 text-foreground"><%= tugas.title %></p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <span class="text-xs text-muted-foreground block">Tanggal Pelaksanaan</span>
+            <p class="font-semibold mt-0.5">
+              <%= new Date(tugas.request_date).toLocaleDateString('id-ID', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }) %>
+            </p>
+          </div>
+          <div>
+            <span class="text-xs text-muted-foreground block">Rencana Jam Kerja</span>
+            <p class="font-semibold font-mono text-primary mt-0.5">
+              <%= new Date(tugas.planned_start_time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) %>
+              s/d
+              <%= new Date(tugas.planned_end_time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) %>
+              WIB
+            </p>
+          </div>
+        </div>
+
+        <div>
+          <span class="text-xs text-muted-foreground block">Instruksi / Deskripsi Tugas</span>
+          <p class="text-sm text-muted-foreground leading-relaxed mt-1 bg-muted/40 p-3 rounded-lg border border-dashed">
+            <%= tugas.description || 'Tidak ada instruksi tambahan.' %>
+          </p>
+        </div>
+
+        <% if (tugas.pimpinan_name) { %>
+          <div>
+            <span class="text-xs text-muted-foreground block">Diterbitkan Oleh</span>
+            <span class="inline-flex items-center gap-1.5 mt-1 text-xs font-semibold bg-primary/10 text-primary px-2.5 py-1 rounded-full">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+              </svg>
+              <%= tugas.pimpinan_name %>
+            </span>
+          </div>
+        <% } %>
+      </div>
+
+      <%# Kolom kanan: Status & Anggota %>
+      <div class="space-y-4">
+        <div data-slot="card" class="rounded-xl border bg-card p-5 space-y-3">
+          <h2 class="font-bold text-sm text-muted-foreground uppercase tracking-wider border-b border-border/50 pb-2">
+            Status
+          </h2>
+          <span class="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold border <%= statusBadge %>">
+            <span class="w-1.5 h-1.5 rounded-full <%= statusDot %>"></span>
+            <%= tugas.status === 'assigned' ? 'Assigned — Belum Dilaporkan' :
+                tugas.status === 'waiting_approval' ? 'Menunggu Persetujuan' :
+                tugas.status === 'approved' ? 'Disetujui' :
+                tugas.status === 'rejected' ? 'Ditolak / Perlu Revisi' :
+                tugas.status === 'pending' ? 'Pending' : tugas.status %>
+          </span>
+
+          <% if (tugas.status === 'assigned') { %>
+            <div class="pt-2">
+              <a href="/pegawai/tugas/<%= tugas.id %>/lapor"
+                class="btn btn-primary w-full flex items-center justify-center gap-2 cursor-pointer">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/>
+                </svg>
+                Isi Laporan Realisasi
+              </a>
+            </div>
+          <% } else if (tugas.status === 'rejected') { %>
+            <div class="pt-2">
+              <a href="/pegawai/tugas/<%= tugas.id %>/lapor"
+                class="btn btn-outline border-destructive text-destructive hover:bg-destructive/10 w-full flex items-center justify-center gap-2 cursor-pointer">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/>
+                </svg>
+                Revisi & Kirim Ulang
+              </a>
+            </div>
+          <% } %>
+        </div>
+
+        <%# Daftar Anggota %>
+        <% if (members && members.length > 0) { %>
+          <div data-slot="card" class="rounded-xl border bg-card p-5 space-y-3">
+            <h2 class="font-bold text-sm text-muted-foreground uppercase tracking-wider border-b border-border/50 pb-2">
+              Anggota Tim
+            </h2>
+            <ul class="space-y-2">
+              <% members.forEach(function(m) { %>
+                <li class="flex items-center gap-2 text-sm">
+                  <div class="w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0">
+                    <%= (m.employee_name || '?').charAt(0).toUpperCase() %>
+                  </div>
+                  <div>
+                    <p class="font-medium leading-tight"><%= m.employee_name %></p>
+                    <p class="text-xs text-muted-foreground font-mono"><%= m.employee_number %></p>
+                  </div>
+                </li>
+              <% }); %>
+            </ul>
+          </div>
+        <% } %>
+      </div>
+    </div>
+
+  </main>
+</body>
+
+</html>

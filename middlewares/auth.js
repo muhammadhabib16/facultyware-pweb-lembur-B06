@@ -11,10 +11,11 @@ async function isAuthenticated(req, res, next) {
   }
 
   try {
-    // 2. AMBIL DATA PHYSICAL EMPLOYEE (BRIDGE LOGIC)
+    // Cari employee yang terhubung dengan user yang sedang login via user_id
+    // Fallback ke pencocokan nama jika kolom user_id belum ter-link
     const [employees] = await db.query(
-      "SELECT id FROM employees WHERE name = ?",
-      [req.session.name],
+      "SELECT id FROM employees WHERE user_id = ? LIMIT 1",
+      [req.session.userId],
     );
 
     if (employees.length > 0) {
@@ -22,15 +23,15 @@ async function isAuthenticated(req, res, next) {
         employee_id: employees[0].id,
       };
     } else {
+      // Fallback: cari berdasarkan nama (untuk data lama yang belum punya user_id)
+      const [byName] = await db.query(
+        "SELECT id FROM employees WHERE name = ? LIMIT 1",
+        [req.session.name],
+      );
       req.user = {
-        employee_id: null,
+        employee_id: byName.length > 0 ? byName[0].id : null,
       };
     }
-
-    // middlewares/auth.js
-    req.user = {
-      employee_id: 4,
-    };
 
     next();
   } catch (error) {

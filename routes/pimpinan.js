@@ -111,4 +111,18 @@ router.delete(
   pimpinanController.hapusPenugasan,
 );
 
+// ── Fitur Baru: Pimpinan approve penugasan (laporan realisasi pegawai) ────────
+router.post(
+  "/penugasan/:id/approve",
+  checkPermission("approve_overtime_reports"),
+  pimpinanController.approvePenugasan,
+);
+
+// ── Fitur Baru: Pimpinan reject penugasan (laporan realisasi pegawai) ─────────
+router.post(
+  "/penugasan/:id/reject",
+  checkPermission("approve_overtime_reports"),
+  pimpinanController.rejectPenugasan,
+);
+
 module.exports = router;
