@@ -463,6 +463,195 @@ exports.detailTugas = async (req, res, next) => {
   }
 };
 
+// GET /pegawai/tugas/:id/export/pdf
+exports.exportDetailPdf = async (req, res, next) => {
+  try {
+    const employeeId = await getEmployeeId(req);
+    const { id } = req.params;
+
+    // 1. Ambil data utama lembur dan validasi hak akses pegawai yang login
+    const [tugasRows] = await db.query(
+      `
+      SELECT 
+        or2.*,
+        pimpinan.name AS pimpinan_name
+      FROM overtime_requests or2
+      JOIN overtime_request_members orm ON orm.overtime_request_id = or2.id
+      LEFT JOIN employees pimpinan ON or2.approved_by_id = pimpinan.id
+      WHERE or2.id = ? AND orm.employee_id = ?
+      `,
+      [id, employeeId],
+    );
+
+    if (tugasRows.length === 0) {
+      return res.status(403).render("error", {
+        message: "Forbidden: Anda tidak memiliki akses ke detail tugas ini.",
+      });
+    }
+
+    const tugas = tugasRows[0];
+
+    // 2. Ambil data members/anggota tim pelaksana tugas
+    const [members] = await db.query(
+      `
+      SELECT 
+        e.name AS employee_name,
+        e.employee_number,
+        orm.role,
+        orm.job_desc,
+        orm.planned_hours,
+        orm.actual_start_time,
+        orm.actual_end_time,
+        orm.actual_hours,
+        orm.notes
+      FROM overtime_request_members orm
+      JOIN employees e ON orm.employee_id = e.id
+      WHERE orm.overtime_request_id = ?
+      `,
+      [id],
+    );
+
+    // 3. Generate PDF
+    const doc = new PDFDocument({ margin: 40, size: "A4" });
+    const filename = `Detail_Penugasan_Lembur_${tugas.request_number}_${Date.now()}.pdf`;
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    doc.pipe(res);
+
+    // ── Header Instansi ──
+    doc
+      .fontSize(16)
+      .font("Helvetica-Bold")
+      .text("Facultyware — Sistem Informasi Kepegawaian", { align: "center" });
+    doc.fontSize(12).text("Detail Penugasan Lembur Pegawai", { align: "center" });
+    doc.moveDown(0.3);
+    doc.fontSize(9).font("Helvetica").text(`Dicetak: ${new Date().toLocaleDateString("id-ID")}`, { align: "center" });
+    doc.moveDown(0.5);
+    doc
+      .moveTo(40, doc.y)
+      .lineTo(doc.page.width - 40, doc.y)
+      .stroke();
+    doc.moveDown(0.8);
+
+    // ── Info Penugasan ──
+    doc.fontSize(10).font("Helvetica-Bold").text("INFORMASI PENUGASAN");
+    doc.moveDown(0.3);
+    doc.fontSize(9).font("Helvetica");
+
+    const formatStatusValue = (status) => {
+      const map = {
+        assigned: "Assigned — Belum Dilaporkan",
+        waiting_approval: "Menunggu Persetujuan",
+        approved: "Disetujui",
+        rejected: "Ditolak / Perlu Revisi",
+        pending: "Pending",
+      };
+      return map[status] || status;
+    };
+
+    const infoItems = [
+      ["No. Referensi", tugas.request_number],
+      ["Judul Agenda", tugas.title || "-"],
+      ["Tanggal Pelaksanaan", new Date(tugas.request_date).toLocaleDateString("id-ID", { weekday: "long", day: "2-digit", month: "long", year: "numeric" })],
+      ["Rencana Jam Kerja", `${new Date(tugas.planned_start_time).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })} - ${new Date(tugas.planned_end_time).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })} WIB`],
+      ["Instruksi / Deskripsi", tugas.description || "Tidak ada deskripsi/instruksi"],
+      ["Diterbitkan Oleh", tugas.pimpinan_name || "-"],
+      ["Status Penugasan", formatStatusValue(tugas.status)],
+    ];
+
+    infoItems.forEach(([label, value]) => {
+      doc.font("Helvetica-Bold").text(`${label}: `, { continued: true });
+      doc.font("Helvetica").text(value);
+    });
+
+    // ── Detail Realisasi Kerja Pegawai (jika sudah mengisi laporan) ──
+    const loggedInMember = members.find(m => m.employee_number === req.session.nip || m.employee_name === req.session.name);
+    if (loggedInMember && (tugas.status === 'waiting_approval' || tugas.status === 'approved' || tugas.status === 'rejected')) {
+      doc.moveDown(1.0);
+      doc.fontSize(10).font("Helvetica-Bold").text("LAPORAN REALISASI ANDA");
+      doc.moveDown(0.3);
+      doc.fontSize(9).font("Helvetica");
+
+      let startStr = "-";
+      let endStr = "-";
+      if (loggedInMember.actual_start_time) {
+        startStr = new Date(loggedInMember.actual_start_time).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+      }
+      if (loggedInMember.actual_end_time) {
+        endStr = new Date(loggedInMember.actual_end_time).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+      }
+
+      const realisasiItems = [
+        ["Waktu Mulai Aktual", startStr],
+        ["Waktu Selesai Aktual", endStr],
+        ["Total Jam Kerja Aktual", `${loggedInMember.actual_hours || "0"} Jam`],
+        ["Catatan Hasil Kerja", loggedInMember.notes || "-"],
+      ];
+
+      realisasiItems.forEach(([label, value]) => {
+        doc.font("Helvetica-Bold").text(`${label}: `, { continued: true });
+        doc.font("Helvetica").text(value);
+      });
+    }
+
+    doc.moveDown(1.0);
+
+    // ── Daftar Anggota Tim ──
+    doc.fontSize(10).font("Helvetica-Bold").text("ANGGOTA TIM PELAKSANA");
+    doc.moveDown(0.3);
+
+    if (members.length === 0) {
+      doc.fontSize(9).font("Helvetica").text("-");
+    } else {
+      const colWidths = [30, 200, 150, 120];
+      const headers = ["No", "Nama Pegawai", "NIP / Nomor Pegawai", "Rencana Jam"];
+
+      doc.fontSize(8).font("Helvetica-Bold");
+      let xPos = 40;
+      const headerY = doc.y;
+      headers.forEach((header, i) => {
+        doc.text(header, xPos + 2, headerY, { width: colWidths[i] - 4, align: "left" });
+        xPos += colWidths[i];
+      });
+
+      doc.moveDown(0.5);
+      doc
+        .moveTo(40, doc.y)
+        .lineTo(doc.page.width - 40, doc.y)
+        .stroke();
+      doc.moveDown(0.3);
+
+      doc.font("Helvetica").fontSize(8);
+      members.forEach((member, index) => {
+        if (doc.y > doc.page.height - 60) doc.addPage();
+
+        const rowY = doc.y;
+        xPos = 40;
+
+        const rowData = [
+          String(index + 1),
+          member.employee_name,
+          member.employee_number || "-",
+          `${member.planned_hours || "0"} Jam`,
+        ];
+
+        rowData.forEach((cell, i) => {
+          doc.text(cell, xPos + 2, rowY, { width: colWidths[i] - 4, align: "left" });
+          xPos += colWidths[i];
+        });
+
+        doc.moveDown(0.8);
+      });
+    }
+
+    doc.end();
+  } catch (err) {
+    console.error("exportDetailPdf error:", err);
+    res.status(500).send("Gagal membuat PDF.");
+  }
+};
+
 // Export PDF daftar tugas
 exports.exportPdf = async (req, res, next) => {
   try {
@@ -911,6 +1100,7 @@ exports.apiCariTugas = async (req, res) => {
 exports.exportPdfRiwayat = async (req, res) => {
   try {
     const employeeId = await getEmployeeId(req);
+    const { search } = req.query;
 
     if (!employeeId) {
       return res.status(400).send("Profil pegawai belum tersedia.");
@@ -931,9 +1121,18 @@ exports.exportPdfRiwayat = async (req, res) => {
     const namaPegawai = pegawai.length > 0 ? pegawai[0].name : "Tidak Diketahui";
     const nipPegawai = pegawai.length > 0 ? pegawai[0].employee_number : "-";
 
+    let whereClause = `WHERE orm.employee_id = ? AND or2.status IN ('waiting_approval', 'approved', 'rejected')`;
+    const params = [employeeId];
+
+    if (search) {
+      whereClause += ` AND (or2.title LIKE ? OR or2.request_number LIKE ?)`;
+      params.push(`%${search}%`, `%${search}%`);
+    }
+
     const [riwayat] = await db.query(
       `
       SELECT DISTINCT
+        or2.id,
         or2.request_number,
         or2.title,
         or2.request_date,
@@ -941,10 +1140,10 @@ exports.exportPdfRiwayat = async (req, res) => {
         or2.created_at
       FROM overtime_requests or2
       JOIN overtime_request_members orm ON orm.overtime_request_id = or2.id
-      WHERE orm.employee_id = ? AND or2.status IN ('waiting_approval', 'approved', 'rejected')
+      ${whereClause}
       ORDER BY or2.created_at DESC, or2.id DESC
       `,
-      [employeeId]
+      params
     );
 
     const doc = new PDFDocument({

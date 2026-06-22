@@ -23,10 +23,7 @@ router.get("/tugas", pegawaiController.listTugas);
 
 // Detail tugas lembur
 router.get("/tugas/:id", pegawaiController.detailTugas);
-
-// Export PDF & Excel daftar tugas
-router.get("/tugas/export/pdf", pegawaiController.exportPdf);
-router.get("/tugas/export/excel", pegawaiController.exportExcel);
+router.get("/tugas/:id/export/pdf", pegawaiController.exportDetailPdf);
 
 // =====================================================
 // LAPORAN LEMBUR

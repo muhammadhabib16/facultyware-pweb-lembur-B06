@@ -33,12 +33,21 @@
         <p class="text-sm text-muted-foreground">Pantau status laporan lembur yang telah Anda kerjakan.</p>
       </div>
 
-      <div class="card p-4 bg-background border rounded-lg shadow-sm">
-        <form hx-get="/pegawai/riwayat" hx-target="body" hx-swap="outerHTML" hx-push-url="true" class="flex gap-4">
+      <div class="card p-4 bg-background border rounded-lg shadow-sm flex flex-col sm:flex-row gap-4 items-center justify-between">
+        <form hx-get="/pegawai/riwayat" hx-target="body" hx-swap="outerHTML" hx-push-url="true" class="flex gap-4 w-full sm:w-auto flex-1">
           <input type="text" name="search" placeholder="Cari judul tugas atau nomor referensi..."
-            value="<%= filters.search || '' %>" class="input flex-1" />
+            value="<%= filters.search || '' %>" class="input flex-1 max-w-md" />
           <button type="submit" class="btn btn-primary">Cari</button>
         </form>
+        <div class="flex gap-2 w-full sm:w-auto">
+          <a
+            href="/pegawai/export/pdf?search=<%= filters.search || '' %>"
+            hx-boost="false"
+            class="btn btn-outline flex items-center gap-1.5 cursor-pointer"
+          >
+            Export PDF
+          </a>
+        </div>
       </div>
 
       <div class="card overflow-hidden border rounded-lg shadow-sm bg-background">
