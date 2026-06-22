@@ -190,10 +190,17 @@
                     </td>
                     <td class="p-4 text-right">
                       <% if (role === 'pimpinan') { %>
-                        <a href="/pimpinan/laporan/<%= item.id %>"
-                          class="btn btn-sm bg-background border border-border hover:border-primary hover:text-primary hover:bg-primary/5 transition-all shadow-sm font-semibold px-4 rounded-lg">
-                          Periksa
-                        </a>
+                        <% if (['waiting_approval', 'approved', 'rejected'].includes(item.status)) { %>
+                          <a href="/pimpinan/laporan/<%= item.id %>"
+                            class="btn btn-sm bg-background border border-border hover:border-primary hover:text-primary hover:bg-primary/5 transition-all shadow-sm font-semibold px-4 rounded-lg">
+                            Periksa
+                          </a>
+                        <% } else { %>
+                          <button disabled
+                            class="btn btn-sm bg-muted text-muted-foreground border border-border opacity-50 cursor-not-allowed font-semibold px-4 rounded-lg">
+                            Periksa
+                          </button>
+                        <% } %>
                       <% } else { %>
                         <span class="text-xs text-muted-foreground italic">-</span>
                       <% } %>
