@@ -3,6 +3,11 @@
     background-color: #062f24 !important;
     border-right: 1px solid #04241b !important;
     box-shadow: 4px 0 24px rgba(6, 47, 36, 0.15) !important;
+    height: 100vh !important;
+    position: sticky !important;
+    top: 0 !important;
+    align-self: flex-start !important;
+    overflow-y: auto !important;
   }
   .sidebar-link {
     display: flex;
@@ -87,15 +92,35 @@
       const path = window.location.pathname;
       document.querySelectorAll('.sidebar-link').forEach(link => {
         const href = link.getAttribute('href');
-        if (href === path || (href !== '/home' && path.startsWith(href))) {
+        let isActive = false;
+        if (href === path) {
+          isActive = true;
+        } else if (href !== '/home') {
+          // Prevent /pimpinan/penugasan from matching /pimpinan/penugasan/buat
+          if (href === '/pimpinan/penugasan' && path.startsWith('/pimpinan/penugasan/buat')) {
+            isActive = false;
+          } else {
+            isActive = path.startsWith(href);
+          }
+        }
+        
+        if (isActive) {
           link.classList.add('active-link');
         } else {
           link.classList.remove('active-link');
         }
       });
     };
-    document.addEventListener('DOMContentLoaded', highlightActiveLink);
-    document.addEventListener('htmx:afterSwap', highlightActiveLink);
+
+    // Execute immediately on swap/load
+    highlightActiveLink();
+
+    // Register global event handlers only once
+    if (!window.sidebarHighlightRegistered) {
+      window.sidebarHighlightRegistered = true;
+      document.addEventListener('DOMContentLoaded', highlightActiveLink);
+      document.addEventListener('htmx:afterSwap', highlightActiveLink);
+    }
   })();
 </script>
 <aside class="w-64 glass-sidebar min-h-screen flex flex-col justify-between z-10 sticky top-0">
