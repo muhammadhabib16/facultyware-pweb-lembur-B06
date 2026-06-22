@@ -48,14 +48,16 @@
   <%- include('../partials/sidebar') %>
 
     <main class="flex-1 p-4 md:p-6 space-y-5 max-w-6xl mx-auto w-full" hx-boost="true">
-      <div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 class="text-2xl font-bold tracking-tight">
-            <%= title %>
-          </h1>
-          <p class="text-sm text-muted-foreground">Kelola dan tinjau seluruh pelaksanaan laporan lembur pegawai.</p>
-        </div>
-        <div class="flex items-end gap-2">
+
+      <!-- Header section -->
+      <div class="mb-6">
+        <h1 class="text-2xl font-bold tracking-tight">
+          <%= title %>
+        </h1>
+        <p class="text-sm text-muted-foreground">Kelola dan tinjau seluruh pelaksanaan laporan lembur pegawai.</p>
+
+        <!-- Export controls: di bawah heading, sejajar -->
+        <div class="flex items-end gap-2 mt-3">
           <div>
             <label class="text-xs font-semibold mb-1 block text-muted-foreground">Periode Ekspor</label>
             <input type="month" id="eksporBulan" class="input input-sm w-40" placeholder="YYYY-MM" />
@@ -75,7 +77,6 @@
       </div>
 
       <script>
-        // Update href ekspor PDF berdasarkan input bulan
         document.addEventListener('DOMContentLoaded', function () {
           const inputBulan = document.getElementById('eksporBulan');
           const btnEkspor = document.getElementById('btnEksporRekapPDF');
@@ -90,6 +91,7 @@
         });
       </script>
 
+      <!-- Filter section -->
       <div class="card p-4 mb-6 bg-background border rounded-lg shadow-sm">
         <form hx-get="/pimpinan/laporan" hx-target="body" hx-swap="outerHTML" hx-push-url="true"
           class="flex flex-col md:flex-row gap-4 items-end">
@@ -118,6 +120,7 @@
         </form>
       </div>
 
+      <!-- Table section -->
       <div class="card overflow-hidden border rounded-lg shadow-sm bg-background">
         <div class="overflow-x-auto">
           <table class="table w-full text-left border-collapse">
