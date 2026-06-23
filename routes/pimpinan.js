@@ -91,6 +91,12 @@ router.get(
   pimpinanController.detailPenugasan,
 );
 
+router.get(
+  "/penugasan/:id/ekspor/pdf",
+  checkPermission("view_overtime_assignments"),
+  pimpinanController.eksporPenugasanPDF,
+);
+
 // ── Fitur 11: Pimpinan mengubah data penugasan lembur  ──
 router.get(
   "/penugasan/:id/edit",

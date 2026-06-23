@@ -1,4 +1,5 @@
 const db = require("../lib/db");
+const PDFDocument = require("pdfkit");
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MENAMPILKAN FORM BUAT PENUGASAN (GET /pimpinan/penugasan/buat)
@@ -554,5 +555,177 @@ exports.rejectPenugasan = async (req, res, next) => {
     next(err);
   } finally {
     connection.release();
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FITUR BARU: EKSPOR PENUGASAN KE PDF
+// GET /pimpinan/penugasan/:id/ekspor/pdf
+// ─────────────────────────────────────────────────────────────────────────────
+exports.eksporPenugasanPDF = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    // Ambil data utama dari tabel overtime_requests
+    const [[tugas]] = await db.query(
+      `
+      SELECT 
+        or2.*,
+        e.name AS pegawai_name,
+        e.employee_number AS pegawai_nip,
+        ou.name AS unit_name,
+        pimpinan.name AS pembuat_nama
+      FROM overtime_requests or2
+      LEFT JOIN employees e ON or2.submitted_by = e.id
+      LEFT JOIN organization_units ou ON e.organization_unit_id = ou.id
+      LEFT JOIN employees pimpinan ON or2.approved_by_id = pimpinan.id
+      WHERE or2.id = ?
+    `,
+      [id],
+    );
+
+    if (!tugas) {
+      return res.status(404).render("error", {
+        message: "Data penugasan tidak ditemukan, Bos!",
+      });
+    }
+
+    // Ambil data pelaksana tugas dari tabel pivot overtime_request_members
+    const [members] = await db.query(
+      `
+      SELECT 
+        e.name AS employee_name,
+        e.employee_number,
+        orm.role,
+        orm.job_desc,
+        orm.planned_hours
+      FROM overtime_request_members orm
+      JOIN employees e ON orm.employee_id = e.id
+      WHERE orm.overtime_request_id = ?
+      ORDER BY e.name ASC
+      `,
+      [id],
+    );
+
+    // Setup PDF Document
+    const doc = new PDFDocument({ margin: 40, size: "A4" });
+    const filename = `Detail_Penugasan_${tugas.request_number}_${Date.now()}.pdf`;
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    doc.pipe(res);
+
+    // ── Header Dokumen ──
+    doc
+      .fontSize(16)
+      .font("Helvetica-Bold")
+      .text("Facultyware — Sistem Informasi Kepegawaian", { align: "center" });
+    doc.fontSize(12).text("Surat Perintah Tugas Lembur", { align: "center" });
+    doc.moveDown(0.3);
+    doc.fontSize(9).font("Helvetica").text(`Dicetak: ${new Date().toLocaleDateString("id-ID")}`, { align: "center" });
+    doc.moveDown(0.5);
+    
+    // Garis Pemisah
+    doc
+      .moveTo(40, doc.y)
+      .lineTo(doc.page.width - 40, doc.y)
+      .stroke();
+    doc.moveDown(0.8);
+
+    // ── Informasi Penugasan ──
+    doc.fontSize(10).font("Helvetica-Bold").text("INFORMASI PENUGASAN");
+    doc.moveDown(0.3);
+    doc.fontSize(9).font("Helvetica");
+
+    const formatStatusValue = (status) => {
+      const map = {
+        assigned: "Assigned — Belum Dilaporkan",
+        waiting_approval: "Menunggu Persetujuan",
+        approved: "Disetujui",
+        rejected: "Ditolak / Perlu Revisi",
+        pending: "Pending",
+      };
+      return map[status] || status;
+    };
+
+    const infoItems = [
+      ["No. Referensi", tugas.request_number],
+      ["Judul Agenda", tugas.title || "-"],
+      ["Tanggal Pelaksanaan", new Date(tugas.request_date).toLocaleDateString("id-ID", { weekday: "long", day: "2-digit", month: "long", year: "numeric" })],
+      ["Rencana Jam Kerja", `${new Date(tugas.planned_start_time).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })} - ${new Date(tugas.planned_end_time).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })} WIB`],
+      ["Instruksi / Catatan", tugas.description || "Tidak ada deskripsi/catatan tambahan."],
+      ["Diterbitkan Oleh", tugas.pembuat_nama || "Pimpinan"],
+      ["Status Penugasan", formatStatusValue(tugas.status)],
+    ];
+
+    infoItems.forEach(([label, value]) => {
+      doc.font("Helvetica-Bold").text(`${label}: `, { continued: true });
+      doc.font("Helvetica").text(value);
+    });
+
+    doc.moveDown(1.0);
+
+    // ── Daftar Anggota Tim Pelaksana ──
+    doc.fontSize(10).font("Helvetica-Bold").text("ANGGOTA TIM PELAKSANA");
+    doc.moveDown(0.3);
+
+    if (members.length === 0) {
+      doc.fontSize(9).font("Helvetica").text("Tidak ada data pelaksana tugas.");
+    } else {
+      const colWidths = [30, 200, 150, 120];
+      const headers = ["No", "Nama Pegawai", "NIP / Nomor Pegawai", "Rencana Jam"];
+
+      // Render Header Tabel
+      doc.fontSize(8).font("Helvetica-Bold");
+      let xPos = 40;
+      const headerY = doc.y;
+      headers.forEach((header, i) => {
+        doc.text(header, xPos + 2, headerY, { width: colWidths[i] - 4, align: "left" });
+        xPos += colWidths[i];
+      });
+
+      doc.moveDown(0.5);
+      doc
+        .moveTo(40, doc.y)
+        .lineTo(doc.page.width - 40, doc.y)
+        .stroke();
+      doc.moveDown(0.3);
+
+      // Render Baris Data
+      doc.font("Helvetica").fontSize(8);
+      members.forEach((member, index) => {
+        if (doc.y > doc.page.height - 60) doc.addPage();
+
+        const rowY = doc.y;
+        xPos = 40;
+
+        const rowData = [
+          String(index + 1),
+          member.employee_name,
+          member.employee_number || "-",
+          `${member.planned_hours || "0"} Jam`,
+        ];
+
+        rowData.forEach((cell, i) => {
+          doc.text(cell, xPos + 2, rowY, { width: colWidths[i] - 4, align: "left" });
+          xPos += colWidths[i];
+        });
+
+        doc.moveDown(0.8);
+      });
+    }
+
+    // ── Tanda Tangan Pimpinan ──
+    doc.moveDown(1.5);
+    const rightColX = doc.page.width - 200;
+    doc.fontSize(9).font("Helvetica").text("Diterbitkan oleh,", rightColX, doc.y, { width: 160, align: "center" });
+    doc.moveDown(2.5);
+    doc.font("Helvetica-Bold").text(tugas.pembuat_nama || "Pimpinan", rightColX, doc.y, { width: 160, align: "center" });
+    doc.font("Helvetica").fontSize(8).text("Pimpinan / Atasan", rightColX, doc.y, { width: 160, align: "center" });
+
+    doc.end();
+  } catch (err) {
+    console.error("eksporPenugasanPDF error:", err);
+    next(err);
   }
 };

@@ -65,8 +65,17 @@
 
       <%# Tombol aksi berdasarkan status %>
       <div class="flex flex-wrap items-center gap-2">
+        <a href="/pimpinan/penugasan/<%= tugas.id %>/ekspor/pdf" hx-boost="false" target="_blank"
+          class="btn btn-sm btn-outline inline-flex items-center gap-1.5 cursor-pointer">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Ekspor ke PDF
+        </a>
+
         <% if (tugas.status === 'waiting_approval' || tugas.status === 'pending') { %>
-          <button onclick="document.getElementById('rejectModal').classList.remove('hidden')"
+          <button onclick="openRejectModal()"
             class="btn btn-sm btn-outline border-destructive text-destructive hover:bg-destructive/10 cursor-pointer">
             <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
@@ -231,38 +240,97 @@
         </div>
       </div>
     </div>
-
-    <%# Modal: Form Penolakan / Revisi %>
-    <div id="rejectModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div class="bg-background border border-border rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
-        <div class="p-4 border-b border-border flex justify-between items-center bg-muted/20">
-          <h3 class="font-bold text-sm"><%= tugas.status === 'pending' ? 'Tolak Permohonan Lembur' : 'Tolak / Minta Revisi Laporan' %></h3>
-          <button onclick="document.getElementById('rejectModal').classList.add('hidden')"
-            class="text-muted-foreground hover:text-foreground text-xl font-bold leading-none">&times;</button>
-        </div>
-        <form hx-post="/pimpinan/penugasan/<%= tugas.id %>/reject" class="p-5 space-y-4">
-          <p class="text-sm text-muted-foreground">
-            <%= tugas.status === 'pending' ? 'Berikan catatan alasan penolakan permohonan lembur mandiri ini.' : 'Berikan catatan alasan penolakan yang jelas agar pegawai dapat memperbaiki laporan realisasinya.' %>
-          </p>
-          <div>
-            <label for="catatan_revisi" class="block text-xs font-semibold mb-1.5">
-              Alasan Penolakan / Catatan Perbaikan <span class="text-destructive">*</span>
-            </label>
-            <textarea id="catatan_revisi" name="catatan_revisi" rows="4" class="textarea w-full text-sm"
-              placeholder="Contoh: Jam realisasi tidak sesuai rencana, mohon dilengkapi..."
-              required></textarea>
-          </div>
-          <div class="flex justify-end gap-2 pt-2 border-t border-border">
-            <button type="button"
-              onclick="document.getElementById('rejectModal').classList.add('hidden')"
-              class="btn btn-sm btn-outline">Batal</button>
-            <button type="submit" class="btn btn-sm btn-destructive">Kirim Penolakan</button>
-          </div>
-        </form>
-      </div>
-    </div>
-
   </main>
+
+  <%# Modal: Form Penolakan / Revisi %>
+  <div id="rejectModal"
+    style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 9999; padding: 16px; transition: opacity 300ms cubic-bezier(0.4, 0, 0.2, 1); opacity: 0;">
+    <div class="bg-card border border-border/80 rounded-xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col"
+      style="transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1); transform: scale(0.95); background-color: var(--card-bg, #ffffff); border-radius: 12px; border: 1px solid rgba(4, 120, 87, 0.15);">
+      
+      <%# Modal Header %>
+      <div class="flex justify-between items-center bg-muted/10" style="padding: 20px 24px; border-bottom: 1px solid rgba(4, 120, 87, 0.15);">
+        <h3 class="text-sm md:text-base font-bold tracking-tight text-foreground leading-none">
+          <%= tugas.status === 'pending' ? 'Tolak Permohonan Lembur' : 'Tolak / Minta Revisi Laporan' %>
+        </h3>
+        <button type="button" onclick="closeRejectModal()"
+          class="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground transition-all cursor-pointer focus:outline-hidden"
+          aria-label="Tutup">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+          </svg>
+        </button>
+      </div>
+      
+      <%# Modal Form %>
+      <form hx-post="/pimpinan/penugasan/<%= tugas.id %>/reject" class="flex flex-col m-0" style="padding: 24px; gap: 24px;">
+        
+        <%# Kotak Notifikasi %>
+        <div class="bg-destructive/5 text-destructive border border-destructive/10 rounded-lg" style="padding: 16px;">
+          <div class="flex gap-3 items-start">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 mt-0.5">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <span class="tracking-normal font-medium text-xs leading-relaxed">
+              <%= tugas.status === 'pending' ? 'Mohon berikan alasan penolakan agar rencana lembur ini dibatalkan.' : 'Berikan catatan perbaikan yang jelas agar pegawai dapat merevisi dan melengkapi laporannya.' %>
+            </span>
+          </div>
+        </div>
+
+        <%# Ruang Input Teks %>
+        <div class="flex flex-col" style="gap: 8px;">
+          <label for="catatan_revisi" class="block text-[10px] md:text-xs font-bold text-muted-foreground uppercase tracking-wider">
+            Catatan Alasan / Perbaikan <span class="text-destructive font-bold">*</span>
+          </label>
+          <textarea id="catatan_revisi" name="catatan_revisi" rows="4" 
+            class="w-full text-sm rounded-lg border border-border/80 bg-background text-foreground focus:border-primary focus:ring-primary focus:ring-1 transition-all placeholder:text-muted-foreground/50 focus:outline-hidden leading-relaxed"
+            style="padding: 12px 16px; min-height: 110px;"
+            placeholder="Contoh: Jam pelaksanaan aktual tidak sesuai dengan rencana agenda, mohon diperbaiki..."
+            required></textarea>
+        </div>
+
+        <%# Modal Footer %>
+        <div class="flex justify-end items-center gap-3" style="padding-top: 20px; border-top: 1px solid rgba(4, 120, 87, 0.15);">
+          <button type="button"
+            onclick="closeRejectModal()"
+            class="btn btn-sm btn-outline cursor-pointer px-5 py-2 font-semibold shadow-2xs transition-colors rounded-lg text-xs md:text-sm">
+            Batal
+          </button>
+          <button type="submit" class="btn btn-sm btn-destructive cursor-pointer px-5 py-2 font-semibold shadow-xs rounded-lg text-xs md:text-sm">
+            Kirim Penolakan
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function openRejectModal() {
+      const modal = document.getElementById('rejectModal');
+      const modalContent = modal.querySelector('.bg-card');
+      
+      modal.style.display = 'flex';
+      
+      // Force reflow to trigger CSS transitions
+      void modal.offsetHeight;
+      
+      modal.style.opacity = '1';
+      modalContent.style.transform = 'scale(1)';
+    }
+
+    function closeRejectModal() {
+      const modal = document.getElementById('rejectModal');
+      const modalContent = modal.querySelector('.bg-card');
+      
+      modal.style.opacity = '0';
+      modalContent.style.transform = 'scale(0.95)';
+      
+      // Hide from layout once transition ends (300ms)
+      setTimeout(() => {
+        modal.style.display = 'none';
+      }, 300);
+    }
+  </script>
 </body>
 
 </html>
