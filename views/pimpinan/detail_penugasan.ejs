@@ -244,9 +244,9 @@
 
   <%# Modal: Form Penolakan / Revisi %>
   <div id="rejectModal"
-    style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 9999; padding: 16px; transition: opacity 300ms cubic-bezier(0.4, 0, 0.2, 1); opacity: 0;">
-    <div class="bg-card border border-border/80 rounded-xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col"
-      style="transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1); transform: scale(0.95); background-color: var(--card-bg, #ffffff); border-radius: 12px; border: 1px solid rgba(4, 120, 87, 0.15);">
+    style="position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; background-color: rgba(0, 0, 0, 0.6) !important; backdrop-filter: blur(4px) !important; -webkit-backdrop-filter: blur(4px) !important; display: none !important; align-items: center !important; justify-content: center !important; z-index: 99999 !important; padding: 16px !important; transition: opacity 300ms cubic-bezier(0.4, 0, 0.2, 1) !important; opacity: 0 !important;">
+    <div class="bg-card border border-border/80 shadow-2xl w-full max-w-md overflow-hidden flex flex-col"
+      style="transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1) !important; transform: scale(0.95) !important; background-color: var(--card-bg, #ffffff) !important; border-radius: 16px !important; border: 1px solid rgba(4, 120, 87, 0.15) !important; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;">
       
       <%# Modal Header %>
       <div class="flex justify-between items-center bg-muted/10" style="padding: 20px 24px; border-bottom: 1px solid rgba(4, 120, 87, 0.15);">
@@ -307,27 +307,31 @@
   <script>
     function openRejectModal() {
       const modal = document.getElementById('rejectModal');
-      const modalContent = modal.querySelector('.bg-card');
+      const modalContent = modal.querySelector('.bg-card, [style*="border-radius: 16px"]');
       
-      modal.style.display = 'flex';
+      modal.style.setProperty('display', 'flex', 'important');
       
       // Force reflow to trigger CSS transitions
       void modal.offsetHeight;
       
-      modal.style.opacity = '1';
-      modalContent.style.transform = 'scale(1)';
+      modal.style.setProperty('opacity', '1', 'important');
+      if (modalContent) {
+        modalContent.style.setProperty('transform', 'scale(1)', 'important');
+      }
     }
 
     function closeRejectModal() {
       const modal = document.getElementById('rejectModal');
-      const modalContent = modal.querySelector('.bg-card');
+      const modalContent = modal.querySelector('.bg-card, [style*="border-radius: 16px"]');
       
-      modal.style.opacity = '0';
-      modalContent.style.transform = 'scale(0.95)';
+      modal.style.setProperty('opacity', '0', 'important');
+      if (modalContent) {
+        modalContent.style.setProperty('transform', 'scale(0.95)', 'important');
+      }
       
       // Hide from layout once transition ends (300ms)
       setTimeout(() => {
-        modal.style.display = 'none';
+        modal.style.setProperty('display', 'none', 'important');
       }, 300);
     }
   </script>
