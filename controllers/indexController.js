@@ -91,7 +91,6 @@ const login = async (req, res, next) => {
       [email]
     );
 
-
     if (rows.length === 0) {
       return res.render("login", {
         title: "Login",
@@ -101,7 +100,7 @@ const login = async (req, res, next) => {
 
     const user = rows[0];
 
-
+  
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
@@ -124,18 +123,21 @@ const login = async (req, res, next) => {
 
     const userRole = roles.length > 0 ? roles[0].name : null;
 
+    
     // Cari employee yang terhubung dengan user ini
     const [employees] = await db.query(
-      "SELECT id FROM employees WHERE user_id = ? LIMIT 1",
+      "SELECT id, employee_number FROM employees WHERE user_id = ? LIMIT 1",
       [user.id]
     );
     const employeeId = employees.length > 0 ? employees[0].id : null;
+    const employeeNumber = employees.length > 0 ? employees[0].employee_number : null;
 
     req.session.userId = user.id;
     req.session.name = user.name;
     req.session.email = user.email;
     req.session.role = userRole;
-    req.session.employeeId = employeeId; // Simpan langsung ke session
+    req.session.employeeId = employeeId; 
+    req.session.employee_number = employeeNumber;
 
     if (req.headers["hx-request"]) {
       res.setHeader("HX-Redirect", "/home");

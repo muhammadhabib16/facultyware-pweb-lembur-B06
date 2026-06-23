@@ -15,6 +15,7 @@ exports.formBuatPenugasan = async (req, res, next) => {
       employees,
       error: null,
       success: null,
+      
     });
   } catch (err) {
     console.error("formBuatPenugasan error:", err);
