@@ -78,54 +78,59 @@ http://localhost:3000
 
 ## Pembagian Tugas Anggota
 
-Berdasarkan rancangan pengerjaan modul dan fitur aplikasi, berikut adalah pembagian tugas dan penanggung jawab dari masing-masing anggota tim:
+Berdasarkan rancangan pengerjaan modul dan fitur aplikasi, berikut adalah pembagian tugas dan penanggung jawab dari masing-masing anggota tim yang telah disesuaikan:
 
 ### 1. Alya Salsa Nabila (NIM: 2411523006)
 *   **Modul**: Modul Pegawai
 *   **Fitur Penanggung Jawab**:
-    *   Pegawai dapat mengajukan permohonan lembur (C)
-    *   Pegawai mengajukan laporan pelaksanaan lembur (U)
-    *   Pegawai dapat membatalkan pengajuan lembur sebelum disetujui (D)
-    *   Pegawai dapat melihat riwayat pengajuan lembur pribadi (R)
-    *   Pegawai dapat mengekspor riwayat pengajuan lembur dalam bentuk PDF
-    *   Pegawai dapat menyediakan REST API untuk melihat riwayat pengajuan lembur pribadi
+    1.  Pegawai dapat mengajukan permohonan lembur (C)
+    2.  Pegawai mengajukan laporan pelaksanaan lembur (U)
+    3.  Pegawai dapat membatalkan pengajuan lembur sebelum disetujui (D)
+    4.  Pegawai dapat melihat riwayat pengajuan lembur pribadi (R)
+    5.  Pegawai dapat mengekspor riwayat pengajuan lembur dalam bentuk pdf
+    6.  Pegawai dapat menyediakan REST API untuk melihat riwayat pengajuan lembur pribadi
+    7.  Pegawai Membatalkan Pengajuan Lembur Mandiri
 
 ### 2. M. Ananda Akbar (NIM: 2411523007)
 *   **Modul**: Modul Pegawai
 *   **Fitur Penanggung Jawab**:
-    *   Pegawai dapat melihat list penugasan lembur (R)
-    *   Pegawai dapat melihat detail list penugasan lembur (R)
-    *   Pegawai dapat melakukan pencarian penugasan lembur (S)
-    *   Pegawai dapat melihat status persetujuan lembur (R)
-    *   Pegawai dapat mengekspor detail penugasan lembur dalam bentuk PDF
-    *   Pegawai dapat menyediakan REST API untuk pencarian penugasan lembur berdasarkan kata kunci
+    8.  Pegawai dapat melihat list penugasan lembur (R)
+    9.  Pegawai dapat melihat detail list penugasan lembur (R)
+    10. Pegawai dapat melakukan pencarian penugasan lembur (S)
+    11. Pegawai dapat melihat status persetujuan lembur (R)
+    12. Pegawai dapat mengekspor detail penugasan lembur dalam bentuk pdf
+    13. Pegawai dapat menyediakan REST API untuk pencarian penugasan lembur berdasarkan kata kunci
 
 ### 3. Muhammad Habib (NIM: 2411522024)
 *   **Modul**: Modul Pegawai & Modul Pimpinan
 *   **Fitur Penanggung Jawab**:
-    *   Pegawai dapat merevisian laporan penugasan lembur pegawai
-    *   Pimpinan dapat membuat penugasan lembur pegawai (C)
-    *   Pimpinan dapat melihat daftar & detail penugasan lembur pegawai (R)
-    *   Pimpinan dapat mengubah data penugasan lembur pegawai (U)
-    *   Pimpinan dapat mengekspor penugasan dalam bentuk PDF
-    *   Pimpinan dapat menghapus / membatalkan penugasan lembur pegawai (D)
-    *   Implementasi REST API untuk Status Penugasan
+    14. Pegawai dapat merevisi laporan penugasan lembur pegawai
+    15. Pimpinan dapat membuat penugasan lembur pegawai (C)
+    16. Pimpinan dapat melihat daftar & detail penugasan lembur pegawai (R)
+    17. Pimpinan dapat mengubah data penugasan lembur pegawai (U)
+    18. Pimpinan dapat mengekspor penugasan dalam bentuk pdf
+    19. Pimpinan dapat menghapus / membatalkan penugasan lembur pegawai(D)
+    20. Implementasi REST API untuk Status Penugasan
+    21. Persetujuan & Penolakan khusus Penugasan Lembur Langsung
 
 ### 4. Hasyfi Zharfan Caniago (NIM: 2411522037)
 *   **Modul**: Modul Pimpinan
 *   **Fitur Penanggung Jawab**:
-    *   Pimpinan dapat melihat list laporan lembur (L)
-    *   Pimpinan dapat melihat detail laporan lembur (R)
-    *   Pimpinan dapat mengkonfirmasi laporan lembur pegawai (U)
-    *   Pimpinan dapat menolak laporan lembur dengan catatan revisi (U)
-    *   Pimpinan dapat mengekspor laporan lembur dalam bentuk PDF/DOCX
-    *   Implementasi REST API untuk mengembalikan rekap/statistik (angka) kinerja persetujuan pimpinan (jumlah)
+    22. Pimpinan dapat melihat list laporan lembur (L)
+    23. Pimpinan dapat melihat detail laporan lembur (R)
+    24. Pimpinan dapat mengkonfirmasi laporan lembur pegawai (U)
+    25. Pimpinan dapat menolak laporan lembur dengan catatan revisi (U)
+    26. Pimpinan dapat mengekspor laporan lembur dalam bentuk pdf/docx
+    27. Implementasi REST API untuk mengembalikan rekap/statistik (angka) kinerja persetujuan pimpinan (jumlah laporan menunggu, disetujui, dan ditolak)
+    28. Pimpinan dapat Ekspor Detail Laporan Kerja Pegawai ke Microsoft Word (DOCX)
+    29. Ekspor Rekap Bulanan Semua Pegawai ke PDF
 
 ### 5. Darrel Rajendra Kurnia (NIM: 2211523035)
 *   **Modul**: Modul Admin Kepegawaian
 *   **Fitur Penanggung Jawab**:
-    *   Admin Pegawai dapat merekap laporan lembur bulanan
-    *   Admin Pegawai dapat membuat laporan rekapan dan dapat diunduh dalam format XLSX
-    *   Admin Pegawai dapat memfilter laporan berdasarkan tanggal/divisi
-    *   Admin Pegawai dapat menambahkan akun pegawai baru
-    *   Implementasi REST API untuk rekap data lembur
+    30. Admin Pegawai dapat merekap laporan lembur bulanan
+    31. Admin Pegawai dapat membuat laporan rekapan dan dapat diunduh dalam format xlsx
+    32. Admin Pegawai dapat memfilter laporan berdasarkan tanggal/divisi
+    33. Admin Pegawai dapat menambahkan akun pegawai baru
+    34. Implementasi REST API untuk rekap data lembur
+    35. Melihat Daftar Pegawai (List Pegawai)
