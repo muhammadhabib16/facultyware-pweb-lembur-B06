@@ -521,23 +521,42 @@ exports.exportDetailPdf = async (req, res, next) => {
 
     // ── Header Instansi ──
     doc
-      .fontSize(16)
+      .fontSize(14)
       .font("Helvetica-Bold")
-      .text("Facultyware — Sistem Informasi Kepegawaian", { align: "center" });
-    doc.fontSize(12).text("Detail Penugasan Lembur Pegawai", { align: "center" });
-    doc.moveDown(0.3);
-    doc.fontSize(9).font("Helvetica").text(`Dicetak: ${new Date().toLocaleDateString("id-ID")}`, { align: "center" });
-    doc.moveDown(0.5);
+      .fillColor("#0f172a")
+      .text("DETAIL PENUGASAN LEMBUR PEGAWAI", { align: "center" });
     doc
+      .fontSize(10)
+      .font("Helvetica-Bold")
+      .fillColor("#475569")
+      .text("FACULTYWARE — SISTEM INFORMASI KEPEGAWAIAN", { align: "center" });
+    doc.moveDown(0.4);
+    doc
+      .fontSize(8)
+      .font("Helvetica")
+      .fillColor("#64748b")
+      .text(`Dicetak: ${new Date().toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" })}`, { align: "center" });
+    doc.moveDown(0.8);
+
+    // Garis pembatas kop surat formal (double line)
+    doc
+      .lineWidth(1.5)
+      .strokeColor("#0f172a")
       .moveTo(40, doc.y)
       .lineTo(doc.page.width - 40, doc.y)
       .stroke();
-    doc.moveDown(0.8);
+    doc.moveDown(0.12);
+    doc
+      .lineWidth(0.5)
+      .strokeColor("#94a3b8")
+      .moveTo(40, doc.y)
+      .lineTo(doc.page.width - 40, doc.y)
+      .stroke();
+    doc.moveDown(1.2);
 
     // ── Info Penugasan ──
-    doc.fontSize(10).font("Helvetica-Bold").text("INFORMASI PENUGASAN");
-    doc.moveDown(0.3);
-    doc.fontSize(9).font("Helvetica");
+    doc.fontSize(10).font("Helvetica-Bold").fillColor("#0f172a").text("I. Informasi Penugasan");
+    doc.moveDown(0.5);
 
     const formatStatusValue = (status) => {
       const map = {
@@ -560,18 +579,34 @@ exports.exportDetailPdf = async (req, res, next) => {
       ["Status Penugasan", formatStatusValue(tugas.status)],
     ];
 
+    let infoY = doc.y;
     infoItems.forEach(([label, value]) => {
-      doc.font("Helvetica-Bold").text(`${label}: `, { continued: true });
-      doc.font("Helvetica").text(value);
+      const valueHeight = doc.heightOfString(value, { width: 340 });
+      const rowHeight = Math.max(14, valueHeight) + 6;
+
+      if (infoY + rowHeight > doc.page.height - 60) {
+        doc.addPage();
+        infoY = doc.y;
+      }
+
+      // Draw label
+      doc.font("Helvetica-Bold").fontSize(9).fillColor("#475569").text(label, 45, infoY, { width: 120 });
+      // Draw colon
+      doc.font("Helvetica").fontSize(9).fillColor("#64748b").text(":", 165, infoY);
+      // Draw value
+      doc.font("Helvetica").fontSize(9).fillColor("#1e293b").text(value, 175, infoY, { width: 340 });
+
+      infoY += rowHeight;
     });
+
+    doc.y = infoY;
 
     // ── Detail Realisasi Kerja Pegawai (jika sudah mengisi laporan) ──
     const loggedInMember = members.find(m => m.employee_number === req.session.nip || m.employee_name === req.session.name);
     if (loggedInMember && (tugas.status === 'waiting_approval' || tugas.status === 'approved' || tugas.status === 'rejected')) {
-      doc.moveDown(1.0);
-      doc.fontSize(10).font("Helvetica-Bold").text("LAPORAN REALISASI ANDA");
-      doc.moveDown(0.3);
-      doc.fontSize(9).font("Helvetica");
+      doc.moveDown(1.5);
+      doc.fontSize(10).font("Helvetica-Bold").fillColor("#0f172a").text("II. Laporan Realisasi Anda");
+      doc.moveDown(0.5);
 
       let startStr = "-";
       let endStr = "-";
@@ -589,46 +624,71 @@ exports.exportDetailPdf = async (req, res, next) => {
         ["Catatan Hasil Kerja", loggedInMember.notes || "-"],
       ];
 
+      let realisasiY = doc.y;
       realisasiItems.forEach(([label, value]) => {
-        doc.font("Helvetica-Bold").text(`${label}: `, { continued: true });
-        doc.font("Helvetica").text(value);
+        const valueHeight = doc.heightOfString(value, { width: 340 });
+        const rowHeight = Math.max(14, valueHeight) + 6;
+
+        if (realisasiY + rowHeight > doc.page.height - 60) {
+          doc.addPage();
+          realisasiY = doc.y;
+        }
+
+        // Draw label
+        doc.font("Helvetica-Bold").fontSize(9).fillColor("#475569").text(label, 45, realisasiY, { width: 120 });
+        // Draw colon
+        doc.font("Helvetica").fontSize(9).fillColor("#64748b").text(":", 165, realisasiY);
+        // Draw value
+        doc.font("Helvetica").fontSize(9).fillColor("#1e293b").text(value, 175, realisasiY, { width: 340 });
+
+        realisasiY += rowHeight;
       });
+
+      doc.y = realisasiY;
     }
 
-    doc.moveDown(1.0);
+    doc.moveDown(1.5);
 
     // ── Daftar Anggota Tim ──
-    doc.fontSize(10).font("Helvetica-Bold").text("ANGGOTA TIM PELAKSANA");
-    doc.moveDown(0.3);
+    const sectionNum = (loggedInMember && (tugas.status === 'waiting_approval' || tugas.status === 'approved' || tugas.status === 'rejected')) ? "III" : "II";
+    doc.fontSize(10).font("Helvetica-Bold").fillColor("#0f172a").text(`${sectionNum}. Anggota Tim Pelaksana`);
+    doc.moveDown(0.5);
 
     if (members.length === 0) {
-      doc.fontSize(9).font("Helvetica").text("-");
+      doc.fontSize(9).font("Helvetica").fillColor("#64748b").text("-");
     } else {
-      const colWidths = [30, 200, 150, 120];
+      const colWidths = [25, 195, 165, 130];
       const headers = ["No", "Nama Pegawai", "NIP / Nomor Pegawai", "Rencana Jam"];
 
-      doc.fontSize(8).font("Helvetica-Bold");
-      let xPos = 40;
-      const headerY = doc.y;
+      // Hitung tinggi maksimum baris header
+      doc.font("Helvetica-Bold").fontSize(9);
+      let maxHeaderHeight = 0;
       headers.forEach((header, i) => {
-        doc.text(header, xPos + 2, headerY, { width: colWidths[i] - 4, align: "left" });
+        const h = doc.heightOfString(header, { width: colWidths[i] - 4 });
+        if (h > maxHeaderHeight) maxHeaderHeight = h;
+      });
+      const headerRowHeight = maxHeaderHeight + 12;
+
+      let yPos = doc.y;
+
+      // Draw background header tabel (slate-800)
+      doc.fillColor("#1e293b").rect(40, yPos, 515, headerRowHeight).fill();
+
+      // Write text header tabel
+      doc.fillColor("#ffffff").font("Helvetica-Bold").fontSize(9);
+      let xPos = 40;
+      headers.forEach((header, i) => {
+        const textHeight = doc.heightOfString(header, { width: colWidths[i] - 4 });
+        const yOffset = (headerRowHeight - textHeight) / 2;
+        doc.text(header, xPos + 2, yPos + yOffset, { width: colWidths[i] - 4, align: "left" });
         xPos += colWidths[i];
       });
 
-      doc.moveDown(0.5);
-      doc
-        .moveTo(40, doc.y)
-        .lineTo(doc.page.width - 40, doc.y)
-        .stroke();
-      doc.moveDown(0.3);
+      yPos += headerRowHeight;
+      doc.fillColor("#000000"); // Reset
 
-      doc.font("Helvetica").fontSize(8);
+      // Render Baris Data
       members.forEach((member, index) => {
-        if (doc.y > doc.page.height - 60) doc.addPage();
-
-        const rowY = doc.y;
-        xPos = 40;
-
         const rowData = [
           String(index + 1),
           member.employee_name,
@@ -636,13 +696,48 @@ exports.exportDetailPdf = async (req, res, next) => {
           `${member.planned_hours || "0"} Jam`,
         ];
 
+        // Hitung tinggi maksimum baris ini
+        doc.font("Helvetica").fontSize(8);
+        let maxRowHeight = 0;
         rowData.forEach((cell, i) => {
-          doc.text(cell, xPos + 2, rowY, { width: colWidths[i] - 4, align: "left" });
+          const h = doc.heightOfString(cell, { width: colWidths[i] - 4 });
+          if (h > maxRowHeight) maxRowHeight = h;
+        });
+        const rowHeight = maxRowHeight + 12;
+
+        // Auto page break
+        if (yPos + rowHeight > doc.page.height - 60) {
+          doc.addPage();
+          yPos = doc.y;
+        }
+
+        // Zebra striping
+        if (index % 2 === 1) {
+          doc.fillColor("#f8fafc").rect(40, yPos, 515, rowHeight).fill();
+        }
+
+        // Garis batas bawah baris
+        doc
+          .lineWidth(0.5)
+          .strokeColor("#cbd5e1")
+          .moveTo(40, yPos + rowHeight)
+          .lineTo(doc.page.width - 40, yPos + rowHeight)
+          .stroke();
+
+        // Tulis teks data baris
+        doc.fillColor("#334155").font("Helvetica").fontSize(8);
+        xPos = 40;
+        rowData.forEach((cell, i) => {
+          const textHeight = doc.heightOfString(cell, { width: colWidths[i] - 4 });
+          const yOffset = (rowHeight - textHeight) / 2;
+          doc.text(cell, xPos + 2, yPos + yOffset, { width: colWidths[i] - 4, align: "left" });
           xPos += colWidths[i];
         });
 
-        doc.moveDown(0.8);
+        yPos += rowHeight;
       });
+
+      doc.y = yPos;
     }
 
     doc.end();
@@ -1158,64 +1253,157 @@ exports.exportPdfRiwayat = async (req, res) => {
 
     doc.pipe(res);
 
+    // ── Header Instansi ──
     doc
-      .fontSize(18)
+      .fontSize(14)
       .font("Helvetica-Bold")
-      .text("LAPORAN RIWAYAT LEMBUR PEGAWAI", {
-        align: "center",
-      });
+      .fillColor("#0f172a")
+      .text("LAPORAN RIWAYAT LEMBUR PEGAWAI", { align: "center" });
+    doc
+      .fontSize(10)
+      .font("Helvetica-Bold")
+      .fillColor("#475569")
+      .text("FACULTYWARE — SISTEM INFORMASI KEPEGAWAIAN", { align: "center" });
+    doc.moveDown(0.4);
+    doc
+      .fontSize(8)
+      .font("Helvetica")
+      .fillColor("#64748b")
+      .text(`Dicetak: ${new Date().toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" })}`, { align: "center" });
+    doc.moveDown(0.8);
 
+    // Garis pembatas kop surat formal (double line)
+    doc
+      .lineWidth(1.5)
+      .strokeColor("#0f172a")
+      .moveTo(40, doc.y)
+      .lineTo(doc.page.width - 40, doc.y)
+      .stroke();
+    doc.moveDown(0.12);
+    doc
+      .lineWidth(0.5)
+      .strokeColor("#94a3b8")
+      .moveTo(40, doc.y)
+      .lineTo(doc.page.width - 40, doc.y)
+      .stroke();
+    doc.moveDown(1.2);
+
+    // ── Profil Pegawai ──
+    doc.fontSize(10).font("Helvetica-Bold").fillColor("#0f172a").text("I. Profil Pegawai");
+    doc.moveDown(0.5);
+
+    const profileItems = [
+      ["Nama Pegawai", namaPegawai],
+      ["NIP / Nomor Pegawai", nipPegawai],
+      ["Tanggal Cetak", new Date().toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" })]
+    ];
+
+    let infoY = doc.y;
+    profileItems.forEach(([label, value]) => {
+      const valueHeight = doc.heightOfString(value, { width: 340 });
+      const rowHeight = Math.max(14, valueHeight) + 6;
+
+      // Draw label
+      doc.font("Helvetica-Bold").fontSize(9).fillColor("#475569").text(label, 45, infoY, { width: 120 });
+      // Draw colon
+      doc.font("Helvetica").fontSize(9).fillColor("#64748b").text(":", 165, infoY);
+      // Draw value
+      doc.font("Helvetica").fontSize(9).fillColor("#1e293b").text(value, 175, infoY, { width: 340 });
+
+      infoY += rowHeight;
+    });
+
+    doc.y = infoY;
     doc.moveDown(1.5);
 
-    doc.fontSize(11).font("Helvetica").text(`Nama Pegawai : ${namaPegawai}`);
-    doc.text(`NIP          : ${nipPegawai}`);
-    doc.text(`Tanggal Cetak : ${new Date().toLocaleDateString("id-ID")}`);
-
-    doc.moveDown();
-
-    doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
-
-    let y = doc.y + 20;
-
-    doc.fontSize(10).font("Helvetica-Bold");
-    doc.text("No", 50, y);
-    doc.text("Nomor Request", 80, y);
-    doc.text("Agenda Lembur", 220, y);
-    doc.text("Status", 470, y);
-
-    y += 15;
-
-    doc.moveTo(50, y).lineTo(550, y).stroke();
-
-    y += 10;
-
-    doc.fontSize(10).font("Helvetica");
+    // ── Tabel Riwayat Lembur ──
+    doc.fontSize(10).font("Helvetica-Bold").fillColor("#0f172a").text("II. Riwayat Pengajuan Lembur");
+    doc.moveDown(0.5);
 
     if (riwayat.length === 0) {
-      doc.text("Belum ada data riwayat lembur.", 50, y);
+      doc.fontSize(9).font("Helvetica").fillColor("#64748b").text("Belum ada data riwayat lembur.", 40);
     } else {
+      const colWidths = [25, 140, 240, 110];
+      const headers = ["No", "Nomor Request", "Agenda Lembur", "Status"];
+
+      // Hitung tinggi maksimum baris header
+      doc.font("Helvetica-Bold").fontSize(9);
+      let maxHeaderHeight = 0;
+      headers.forEach((header, i) => {
+        const h = doc.heightOfString(header, { width: colWidths[i] - 4 });
+        if (h > maxHeaderHeight) maxHeaderHeight = h;
+      });
+      const headerRowHeight = maxHeaderHeight + 12; // 6pt padding atas & bawah
+
+      let yPos = doc.y;
+
+      // Draw background header tabel (slate-800)
+      doc.fillColor("#1e293b").rect(40, yPos, 515, headerRowHeight).fill();
+
+      // Write text header tabel
+      doc.fillColor("#ffffff").font("Helvetica-Bold").fontSize(9);
+      let xPos = 40;
+      headers.forEach((header, i) => {
+        const textHeight = doc.heightOfString(header, { width: colWidths[i] - 4 });
+        const yOffset = (headerRowHeight - textHeight) / 2;
+        doc.text(header, xPos + 2, yPos + yOffset, { width: colWidths[i] - 4, align: "left" });
+        xPos += colWidths[i];
+      });
+
+      yPos += headerRowHeight;
+      doc.fillColor("#000000"); // Reset
+
+      // Render Baris Data
       riwayat.forEach((item, index) => {
-        if (y > 750) {
+        const rowData = [
+          String(index + 1),
+          item.request_number || "-",
+          item.title || "-",
+          formatStatus(item.status)
+        ];
+
+        // Hitung tinggi maksimum baris ini
+        doc.font("Helvetica").fontSize(8);
+        let maxRowHeight = 0;
+        rowData.forEach((cell, i) => {
+          const h = doc.heightOfString(cell, { width: colWidths[i] - 4 });
+          if (h > maxRowHeight) maxRowHeight = h;
+        });
+        const rowHeight = maxRowHeight + 12; // 6pt padding atas & bawah
+
+        // Auto page break
+        if (yPos + rowHeight > doc.page.height - 60) {
           doc.addPage();
-          y = 50;
+          yPos = doc.y;
         }
 
-        doc.text(String(index + 1), 50, y);
+        // Zebra striping
+        if (index % 2 === 1) {
+          doc.fillColor("#f8fafc").rect(40, yPos, 515, rowHeight).fill();
+        }
 
-        doc.text(item.request_number || "-", 80, y, {
-          width: 120,
+        // Garis batas bawah baris
+        doc
+          .lineWidth(0.5)
+          .strokeColor("#cbd5e1")
+          .moveTo(40, yPos + rowHeight)
+          .lineTo(doc.page.width - 40, yPos + rowHeight)
+          .stroke();
+
+        // Tulis teks data baris
+        doc.fillColor("#334155").font("Helvetica").fontSize(8);
+        xPos = 40;
+        rowData.forEach((cell, i) => {
+          const textHeight = doc.heightOfString(cell, { width: colWidths[i] - 4 });
+          const yOffset = (rowHeight - textHeight) / 2;
+          doc.text(cell, xPos + 2, yPos + yOffset, { width: colWidths[i] - 4, align: "left" });
+          xPos += colWidths[i];
         });
 
-        doc.text(item.title || "-", 220, y, {
-          width: 220,
-        });
-
-        doc.text(formatStatus(item.status), 470, y, {
-          width: 70,
-        });
-
-        y += 25;
+        yPos += rowHeight;
       });
+
+      doc.y = yPos;
     }
 
     doc.end();

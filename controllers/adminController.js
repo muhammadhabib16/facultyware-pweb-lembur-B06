@@ -80,26 +80,134 @@ exports.exportExcel = async (req, res, next) => {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Rekap Lembur');
 
-    // Desain Header Kolom Excel
-    worksheet.columns = [
-      { header: 'No. Penugasan', key: 'request_number', width: 25 },
-      { header: 'Nama Pegawai', key: 'pegawai_name', width: 25 },
-      { header: 'Divisi/Unit', key: 'unit_name', width: 25 },
-      { header: 'Agenda Kerja', key: 'title', width: 35 },
-      { header: 'Tanggal', key: 'request_date', width: 15 },
-      { header: 'Status', key: 'status', width: 15 }
+    // Tampilkan garis kisi (gridlines)
+    worksheet.views = [{ showGridLines: true }];
+
+    // ── 1. Kop Surat / Judul Laporan ──
+    worksheet.mergeCells('A2:F2');
+    const titleCell = worksheet.getCell('A2');
+    titleCell.value = 'LAPORAN REKAPITULASI PENUGASAN LEMBUR PEGAWAI';
+    titleCell.font = { name: 'Calibri', bold: true, size: 14, color: { argb: 'FF0F172A' } };
+    titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
+    worksheet.getRow(2).height = 24;
+
+    worksheet.mergeCells('A3:F3');
+    const subtitleCell = worksheet.getCell('A3');
+    subtitleCell.value = 'FACULTYWARE — SISTEM INFORMASI KEPEGAWAIAN';
+    subtitleCell.font = { name: 'Calibri', bold: true, size: 10, color: { argb: 'FF475569' } };
+    subtitleCell.alignment = { vertical: 'middle', horizontal: 'center' };
+    worksheet.getRow(3).height = 18;
+
+    worksheet.mergeCells('A4:F4');
+    const dateCell = worksheet.getCell('A4');
+    const tanggalCetak = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+    dateCell.value = `Dicetak pada: ${tanggalCetak}`;
+    dateCell.font = { name: 'Calibri', italic: true, size: 9, color: { argb: 'FF64748B' } };
+    dateCell.alignment = { vertical: 'middle', horizontal: 'center' };
+    worksheet.getRow(4).height = 16;
+
+    // Baris kosong pemisah
+    worksheet.getRow(5).height = 12;
+
+    // ── 2. Table Headers (Row 6) ──
+    const headerRowNumber = 6;
+    const headerRow = worksheet.getRow(headerRowNumber);
+    headerRow.height = 26; // Lebih lega
+
+    const headers = [
+      { text: 'No. Penugasan', key: 'request_number', width: 28 },
+      { text: 'Nama Pegawai', key: 'pegawai_name', width: 28 },
+      { text: 'Divisi/Unit', key: 'unit_name', width: 25 },
+      { text: 'Agenda Kerja', key: 'title', width: 45 },
+      { text: 'Tanggal', key: 'request_date', width: 18 },
+      { text: 'Status', key: 'status', width: 18 }
     ];
 
-    // Masukkan data ke baris Excel
-    laporan.forEach(item => {
-      worksheet.addRow({
-        request_number: item.request_number,
-        pegawai_name: item.pegawai_name,
-        unit_name: item.unit_name || '-',
-        title: item.title,
-        request_date: new Date(item.request_date).toLocaleDateString('id-ID'),
-        status: item.status
+    headers.forEach((h, colIdx) => {
+      const cell = headerRow.getCell(colIdx + 1);
+      cell.value = h.text;
+      worksheet.getColumn(colIdx + 1).key = h.key;
+      worksheet.getColumn(colIdx + 1).width = h.width;
+
+      // Desain Header (Putih tebal di atas Slate 800)
+      cell.font = { name: 'Calibri', bold: true, size: 11, color: { argb: 'FFFFFFFF' } };
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FF1E293B' }
+      };
+      cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+      cell.border = {
+        top: { style: 'thin', color: { argb: 'FF0F172A' } },
+        bottom: { style: 'medium', color: { argb: 'FF0F172A' } },
+        left: { style: 'thin', color: { argb: 'FF334155' } },
+        right: { style: 'thin', color: { argb: 'FF334155' } }
+      };
+    });
+
+    const thinBorder = {
+      top: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+      bottom: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+      left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+      right: { style: 'thin', color: { argb: 'FFCBD5E1' } }
+    };
+
+    const formatStatusText = (status) => {
+      const map = {
+        pending: 'Pending',
+        assigned: 'Assigned',
+        waiting_approval: 'Waiting Approval',
+        approved: 'Approved',
+        rejected: 'Rejected',
+        completed: 'Completed',
+        cancelled: 'Cancelled'
+      };
+      return map[status] || status || '-';
+    };
+
+    // ── 3. Data Rows ──
+    laporan.forEach((item, index) => {
+      const rowNum = headerRowNumber + 1 + index;
+      const dataRow = worksheet.getRow(rowNum);
+      dataRow.height = 22; // Tinggi baris lebih lega
+
+      const dateStr = new Date(item.request_date).toLocaleDateString('id-ID', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
       });
+
+      dataRow.values = {
+        request_number: item.request_number,
+        pegawai_name: item.pegawai_name || '-',
+        unit_name: item.unit_name || '-',
+        title: item.title || '-',
+        request_date: dateStr,
+        status: formatStatusText(item.status)
+      };
+
+      // Zebra striping: bergantian baris putih dan abu-abu tipis (slate-50)
+      const zebraColor = index % 2 === 1 ? 'FFF8FAFC' : 'FFFFFFFF';
+
+      for (let colIdx = 1; colIdx <= 6; colIdx++) {
+        const cell = dataRow.getCell(colIdx);
+        cell.font = { name: 'Calibri', size: 10, color: { argb: 'FF334155' } };
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: zebraColor }
+        };
+        cell.border = thinBorder;
+
+        // Alignment per kolom
+        if (colIdx === 1 || colIdx === 5 || colIdx === 6) {
+          // No. Penugasan, Tanggal, Status -> Rata Tengah
+          cell.alignment = { vertical: 'middle', horizontal: 'center' };
+        } else {
+          // Nama, Unit, Judul -> Rata Kiri
+          cell.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+        }
+      }
     });
 
     // Kirim file langsung terdownload ke browser pengguna
