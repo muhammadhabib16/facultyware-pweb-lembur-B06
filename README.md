@@ -6,9 +6,13 @@
 Aplikasi ini menggunakan teknologi modern dengan konsep **SPA-like** (Single Page Application) yang cepat dan interaktif tanpa memicu penyegaran halaman penuh (*full-page reload*) di browser, berkat integrasi **HTMX** di sisi client serta rendering partial templates **EJS** di sisi server Express.js.
 
 ### Fitur Utama
+*   **Role-Based Dynamic Dashboard (Fitur Baru)**: Halaman beranda utama (`/home`) menampilkan visualisasi data statistik yang disesuaikan secara intim berdasarkan hak akses pengguna yang sedang login (`req.session.role`).
 *   **Modul Pegawai**: Pegawai dapat mengajukan permohonan lembur mandiri, mengisi laporan jam kerja aktual (realisasi lembur), membatalkan pengajuan, mencari riwayat lembur pribadi, mengekspor laporan ke format PDF, serta melakukan revisi laporan jika ditolak oleh pimpinan.
 *   **Modul Pimpinan**: Pimpinan dapat menerbitkan Surat Perintah Tugas Lembur kepada pegawai secara langsung, menyetujui (*approve*) laporan realisasi, menolak/meminta revisi laporan disertai dengan catatan revisi, serta mengekspor detail penugasan ke format PDF/Word (DOCX).
 *   **Modul Admin Kepegawaian**: Admin dapat memantau dan membuat rekapitulasi data lembur bulanan, memfilter data laporan berdasarkan tanggal/divisi unit kerja, mengunduh laporan rekapitulasi dalam format Excel (XLSX), serta mendaftarkan akun pegawai baru ke dalam sistem.
+
+> [!NOTE]
+> Gambaran arsitektur, struktur proyek, detail endpoint REST API, skema tabel basis data, dan alur modular secara mendalam dapat diakses di berkas [DOKUMENTASI_PROYEK.md](file:///c:/pweb/facultyware/DOKUMENTASI_PROYEK.md).
 
 ### Tech Stack
 *   **Backend**: Node.js & Express.js
@@ -17,6 +21,8 @@ Aplikasi ini menggunakan teknologi modern dengan konsep **SPA-like** (Single Pag
 *   **Interaktivitas**: HTMX (Ajax & partial page update)
 *   **Database**: MySQL (`mysql2` dengan pool koneksi & transaksi ACID)
 *   **Ekspor Dokumen**: PDFKit (PDF), ExcelJS (Excel/XLSX), & DOCX (Word/DOCX)
+*   **E2E Testing**: Playwright (`@playwright/test`)
+
 
 ---
 
@@ -72,6 +78,19 @@ Di dalam folder root project, jalankan salah satu perintah berikut:
 Aplikasi default akan berjalan di port `3000` (atau port lain sesuai konfigurasi). Buka web browser Anda dan akses:
 ```
 http://localhost:3000
+```
+
+### Menjalankan Pengujian Otomatis (E2E Testing)
+Aplikasi ini dilengkapi dengan pengujian *End-to-End* berbasis Playwright. Untuk menjalankan pengujian, pastikan aplikasi sedang berjalan di lokal (`npm run dev`), lalu buka terminal baru dan eksekusi:
+```bash
+# Jalankan seluruh tes secara berurutan
+npx playwright test
+
+# Jalankan skenario tes tertentu saja
+npx playwright test tests/auth.spec.js
+
+# Buka UI interaktif Playwright untuk debugging visual
+npx playwright test --ui
 ```
 
 ---

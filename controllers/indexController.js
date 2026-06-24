@@ -14,43 +14,151 @@ const home = async (req, res, next) => {
     return res.redirect("/login");
   }
 
+  const role = req.session.role;
+  const employeeId = req.session.employeeId;
+
   try {
-    // 1. QUERY AGREGASI STATISTIK (Dinamis dari DB)
-    // Alasan: Menghitung metrik riil operasional kerja untuk dipajang di kartu dashboard
+    let totalTim = 0;
+    let pendingReview = 0;
+    let totalDisetujui = 0;
+    let recentRequests = [];
 
-    // Hitung seluruh total karyawan aktif kelompok Bos di tabel employees
-    const [[{ totalTim }]] = await db.query(
-      "SELECT COUNT(*) AS totalTim FROM employees WHERE status = 'active'",
-    );
+    // Percabangan logika kueri berdasarkan Peran (Role) pengguna
+    if (role === "pegawai") {
+      // 1. PERAN: 'pegawai'
+      
+      // stats.totalTim: Akumulasi Jam Kerja Lembur Saya (Bulan Ini)
+      // approved, submitted_by = employeeId, request_date bulan ini
+      const [[{ totalHours }]] = await db.query(
+        `SELECT COALESCE(SUM(TIMESTAMPDIFF(SECOND, planned_start_time, planned_end_time) / 3600.0), 0) AS totalHours
+         FROM overtime_requests
+         WHERE status = 'approved'
+           AND submitted_by = ?
+           AND MONTH(request_date) = MONTH(NOW())
+           AND YEAR(request_date) = YEAR(NOW())`,
+        [employeeId]
+      );
+      totalTim = Math.round(totalHours * 10) / 10;
 
-    // Hitung berapa banyak tugas lembur yang berstatus menunggu verifikasi pimpinan ('completed')
-    const [[{ pendingReview }]] = await db.query(
-      "SELECT COUNT(*) AS pendingReview FROM overtime_requests WHERE status = 'waiting_approval'",
-    );
+      // stats.pendingReview: total pengajuan lembur pribadi berstatus 'waiting_approval'
+      const [[{ pendingCount }]] = await db.query(
+        `SELECT COUNT(*) AS pendingCount
+         FROM overtime_requests
+         WHERE status = 'waiting_approval'
+           AND submitted_by = ?`,
+        [employeeId]
+      );
+      pendingReview = pendingCount;
 
-    // Hitung berapa banyak total pengajuan lembur yang sudah sukses disetujui pimpinan ('approved')
-    const [[{ totalDisetujui }]] = await db.query(
-      "SELECT COUNT(*) AS totalDisetujui FROM overtime_requests WHERE status = 'approved'",
-    );
+      // stats.totalDisetujui: tugas aktif pribadi hari ini yang berstatus 'assigned'
+      const [[{ assignedCount }]] = await db.query(
+        `SELECT COUNT(*) AS assignedCount
+         FROM overtime_requests
+         WHERE status = 'assigned'
+           AND submitted_by = ?
+           AND request_date = CURDATE()`,
+        [employeeId]
+      );
+      totalDisetujui = assignedCount;
 
-    // 2. QUERY RINGKASAN AKTIVITAS TERBARU
-    // Alasan: Menarik 5 data penugasan lembur teranyar untuk mengisi tabel riwayat di dashboard
-    const [recentRequests] = await db.query(`
-      SELECT 
-        or2.id,
-        or2.request_number, 
-        or2.title, 
-        or2.status, 
-        or2.request_date,
-        e.name AS pegawai_name
-      FROM overtime_requests or2
-      LEFT JOIN employees e ON or2.submitted_by = e.id
-      ORDER BY or2.created_at DESC
-      LIMIT 5
-    `);
+      // recentRequests: maksimal 5 data penugasan lembur terbaru khusus milik pribadi pegawai tersebut
+      const [requests] = await db.query(
+        `SELECT 
+          or2.id,
+          or2.request_number, 
+          or2.title, 
+          or2.status, 
+          or2.request_date,
+          e.name AS pegawai_name
+         FROM overtime_requests or2
+         LEFT JOIN employees e ON or2.submitted_by = e.id
+         WHERE or2.submitted_by = ?
+         ORDER BY or2.created_at DESC
+         LIMIT 5`,
+        [employeeId]
+      );
+      recentRequests = requests;
 
-    // 3. Render ke views/home.ejs dengan suplai data agregasi baru
-    // Dampak: Tampilan dashboard Bos sekarang terisi otomatis dan fungsionalitasnya jalan semua
+    } else if (role === "pimpinan") {
+      // 2. PERAN: 'pimpinan'
+      
+      // stats.totalTim: total karyawan aktif
+      const [[{ totalTimCount }]] = await db.query(
+        "SELECT COUNT(*) AS totalTimCount FROM employees WHERE status = 'active'"
+      );
+      totalTim = totalTimCount;
+
+      // stats.pendingReview: total pengajuan 'waiting_approval' dari semua karyawan
+      const [[{ pendingCount }]] = await db.query(
+        "SELECT COUNT(*) AS pendingCount FROM overtime_requests WHERE status = 'waiting_approval'"
+      );
+      pendingReview = pendingCount;
+
+      // stats.totalDisetujui: total pengajuan 'approved' dari semua karyawan
+      const [[{ approvedCount }]] = await db.query(
+        "SELECT COUNT(*) AS approvedCount FROM overtime_requests WHERE status = 'approved'"
+      );
+      totalDisetujui = approvedCount;
+
+      // recentRequests: 5 antrean pengajuan lembur terbaru dari semua karyawan
+      const [requests] = await db.query(
+        `SELECT 
+          or2.id,
+          or2.request_number, 
+          or2.title, 
+          or2.status, 
+          or2.request_date,
+          e.name AS pegawai_name
+         FROM overtime_requests or2
+         LEFT JOIN employees e ON or2.submitted_by = e.id
+         ORDER BY or2.created_at DESC
+         LIMIT 5`
+      );
+      recentRequests = requests;
+
+    } else if (role === "admin") {
+      // 3. PERAN: 'admin'
+      
+      // stats.totalTim: total karyawan aktif di fakultas
+      const [[{ totalTimCount }]] = await db.query(
+        "SELECT COUNT(*) AS totalTimCount FROM employees WHERE status = 'active'"
+      );
+      totalTim = totalTimCount;
+
+      // stats.pendingReview: akumulasi seluruh jam lembur fakultas yang sudah disetujui (bulan ini)
+      const [[{ totalApprovedHours }]] = await db.query(
+        `SELECT COALESCE(SUM(TIMESTAMPDIFF(SECOND, planned_start_time, planned_end_time) / 3600.0), 0) AS totalApprovedHours
+         FROM overtime_requests
+         WHERE status = 'approved'
+           AND MONTH(request_date) = MONTH(NOW())
+           AND YEAR(request_date) = YEAR(NOW())`
+      );
+      pendingReview = Math.round(totalApprovedHours * 10) / 10;
+
+      // stats.totalDisetujui: total seluruh permohonan lembur yang sukses diselesaikan secara sistem (approved global)
+      const [[{ approvedCount }]] = await db.query(
+        "SELECT COUNT(*) AS approvedCount FROM overtime_requests WHERE status = 'approved'"
+      );
+      totalDisetujui = approvedCount;
+
+      // recentRequests: log 5 transaksi data terbaru global
+      const [requests] = await db.query(
+        `SELECT 
+          or2.id,
+          or2.request_number, 
+          or2.title, 
+          or2.status, 
+          or2.request_date,
+          e.name AS pegawai_name
+         FROM overtime_requests or2
+         LEFT JOIN employees e ON or2.submitted_by = e.id
+         ORDER BY or2.created_at DESC
+         LIMIT 5`
+      );
+      recentRequests = requests;
+    }
+
+    // Render ke views/home.ejs dengan data yang telah disesuaikan dengan peran
     res.render("home", {
       title: "Dashboard Central Panel",
       user: req.session.name,
@@ -63,8 +171,8 @@ const home = async (req, res, next) => {
       recentRequests,
     });
   } catch (err) {
-    console.error("LOGIN ERROR:");
-    console.error(err);
+    console.error("DASHBOARD ERROR:", err);
+    next(err);
   }
 };
 

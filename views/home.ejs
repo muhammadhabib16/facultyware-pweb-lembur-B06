@@ -55,7 +55,7 @@
           <div class="absolute -right-4 -top-4 w-24 h-24 bg-primary/5 rounded-full blur-xl transition-transform duration-500 group-hover:scale-125"></div>
           <div class="flex justify-between items-start relative z-10 w-full">
             <div class="flex flex-col gap-1">
-              <span class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Total Anggota Tim</span>
+              <span class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest"><%= role === 'pegawai' ? 'Total Jam Lembur Saya' : 'Total Anggota Tim' %></span>
               <span class="text-3xl font-extrabold tracking-tight text-foreground leading-none mt-1"><%= stats.totalTim %></span>
             </div>
             <div class="p-2 bg-primary/10 rounded-lg text-primary border border-primary/10 shadow-xs">
@@ -68,7 +68,7 @@
             </div>
           </div>
           <div class="mt-4 pt-3 border-t border-border/20 relative z-10 w-full">
-            <span class="text-[11px] text-muted-foreground font-medium tracking-normal">Karyawan Aktif Terdaftar</span>
+            <span class="text-[11px] text-muted-foreground font-medium tracking-normal"><%= role === 'pegawai' ? 'Akumulasi Bulan Ini (Approved)' : 'Karyawan Aktif Terdaftar' %></span>
           </div>
         </div>
 
@@ -76,7 +76,7 @@
           <div class="absolute -right-4 -top-4 w-24 h-24 bg-amber-500/5 rounded-full blur-xl transition-transform duration-500 group-hover:scale-125"></div>
           <div class="flex justify-between items-start relative z-10 w-full">
             <div class="flex flex-col gap-1">
-              <span class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Butuh Review</span>
+              <span class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest"><%= role === 'pegawai' ? 'Menunggu Persetujuan' : (role === 'admin' ? 'Total Jam Lembur' : 'Butuh Review') %></span>
               <span class="text-3xl font-extrabold tracking-tight <%= stats.pendingReview > 0 ? 'text-amber-500' : 'text-foreground' %> leading-none mt-1"><%= stats.pendingReview %></span>
             </div>
             <div class="p-2 bg-amber-500/10 rounded-lg text-amber-500 border border-amber-500/10 shadow-xs">
@@ -90,7 +90,7 @@
             </div>
           </div>
           <div class="mt-4 pt-3 border-t border-border/20 relative z-10 w-full">
-            <span class="text-[11px] text-muted-foreground font-medium tracking-normal">Berkas Menunggu Verifikasi</span>
+            <span class="text-[11px] text-muted-foreground font-medium tracking-normal"><%= role === 'pegawai' ? 'Pengajuan Lembur Pribadi' : (role === 'admin' ? 'Akumulasi Jam Approved Bulan Ini' : 'Berkas Menunggu Verifikasi') %></span>
           </div>
         </div>
 
@@ -98,7 +98,7 @@
           <div class="absolute -right-4 -top-4 w-24 h-24 bg-emerald-500/5 rounded-full blur-xl transition-transform duration-500 group-hover:scale-125"></div>
           <div class="flex justify-between items-start relative z-10 w-full">
             <div class="flex flex-col gap-1">
-              <span class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Disetujui</span>
+              <span class="text-[10px] font-bold text-muted-foreground uppercase tracking-widest"><%= role === 'pegawai' ? 'Tugas Aktif Hari Ini' : 'Disetujui' %></span>
               <span class="text-3xl font-extrabold tracking-tight text-emerald-500 leading-none mt-1"><%= stats.totalDisetujui %></span>
             </div>
             <div class="p-2 bg-emerald-500/10 rounded-lg text-emerald-500 border border-emerald-500/10 shadow-xs">
@@ -109,7 +109,7 @@
             </div>
           </div>
           <div class="mt-4 pt-3 border-t border-border/20 relative z-10 w-full">
-            <span class="text-[11px] text-muted-foreground font-medium tracking-normal">Selesai Siklus Alur Kerja</span>
+            <span class="text-[11px] text-muted-foreground font-medium tracking-normal"><%= role === 'pegawai' ? 'Tugas Berstatus Assigned' : 'Selesai Siklus Alur Kerja' %></span>
           </div>
         </div>
       </div>
