@@ -139,12 +139,17 @@ const login = async (req, res, next) => {
     req.session.employeeId = employeeId; 
     req.session.employee_number = employeeNumber;
 
-    if (req.headers["hx-request"]) {
-      res.setHeader("HX-Redirect", "/home");
-      return res.end();
-    }
-
-    return res.redirect("/home");
+    req.session.save((err) => {
+      if (err) {
+        console.error("Gagal menyimpan session:", err);
+        return next(err);
+      }
+      if (req.headers["hx-request"]) {
+        res.setHeader("HX-Redirect", "/home");
+        return res.end();
+      }
+      return res.redirect("/home");
+    });
   } catch (err) {
     console.error("LOGIN ERROR:");
     console.error(err);

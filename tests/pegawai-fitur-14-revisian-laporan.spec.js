@@ -1,0 +1,84 @@
+const { test, expect } = require('@playwright/test');
+const PIMPINAN_EMAIL = 'alex@facultyware.com';
+const PIMPINAN_PASS = 'password123';
+const PEGAWAI_EMAIL = 'Isan@facultyware.com';
+const PEGAWAI_PASS = 'password123';
+const PEGAWAI_NAME = 'Isan';
+
+const today = new Date();
+const yyyy = today.getFullYear();
+const mm = String(today.getMonth() + 1).padStart(2, '0');
+const dd = String(today.getDate()).padStart(2, '0');
+const formattedDate = `${yyyy}-${mm}-${dd}`;
+
+async function loginUser(page, email, password, roleLabel) {
+  await page.goto('/login');
+  await page.waitForLoadState('domcontentloaded');
+  await page.waitForSelector('input[name="email"]', { state: 'visible' });
+  await page.fill('input[name="email"]', email);
+  await page.fill('input[name="password"]', password);
+  await page.click('button[type="submit"]');
+  try {
+    await page.waitForURL(/.*\/home/, { timeout: 60000 });
+  } catch (e) {
+    const errorText = await page.locator('.bg-rose-50\\/80, .bg-destructive\\/15, [class*="error"], [class*="destructive"]')
+      .first()
+      .innerText()
+      .catch(() => 'Tidak ada pesan error yang terdeteksi di UI');
+    throw new Error(`Login ${roleLabel} Gagal. Detail error dari UI: "${errorText.trim()}"`);
+  }
+}
+
+test('Pegawai Fitur 14: Merevisi Laporan Penugasan Lembur Pegawai', async ({ page }, testInfo) => {
+  test.setTimeout(120000);
+  const browserName = testInfo.project.name || 'browser';
+  const uniqueTitle = `Revisi Laporan - ${browserName} - ${Date.now()}`;
+  
+  // 1. Pimpinan buat tugas
+  await loginUser(page, PIMPINAN_EMAIL, PIMPINAN_PASS, 'Pimpinan');
+  await page.click('text=Buat Tugas Lembur', { force: true });
+  const empOptionValue = await page.locator('select[name="employee_id"] option', { hasText: PEGAWAI_NAME }).getAttribute('value');
+  await page.selectOption('select[name="employee_id"]', empOptionValue);
+  await page.fill('input[name="title"]', uniqueTitle);
+  await page.fill('input[name="request_date"]', formattedDate);
+  await page.fill('input[name="planned_start_time"]', `${formattedDate}T17:00`);
+  await page.fill('input[name="planned_end_time"]', `${formattedDate}T20:00`);
+  await page.click('button[type="submit"]');
+  await expect(page.locator('text=berhasil diterbitkan')).toBeVisible();
+  await page.click('button:has-text("Keluar Aplikasi")', { force: true });
+  await page.waitForURL(/.*\/login/);
+
+  // 2. Pegawai lapor
+  await loginUser(page, PEGAWAI_EMAIL, PEGAWAI_PASS, 'Pegawai');
+  await page.click('text=Daftar Tugas Aktif', { force: true });
+  await page.locator('tr').filter({ hasText: uniqueTitle }).getByRole('link', { name: 'Detail', exact: true }).click();
+  await page.click('text=Isi Laporan Realisasi');
+  await page.fill('input[name="actual_start_time"]', `${formattedDate}T17:00`);
+  await page.fill('input[name="actual_end_time"]', `${formattedDate}T19:30`);
+  await page.fill('textarea[name="notes"]', 'Laporan pertama.');
+  await page.click('button:has-text("Submit & Kirim ke Pimpinan")');
+  await page.waitForURL(/.*\/pegawai\/riwayat/, { timeout: 15000 }).catch(() => page.waitForTimeout(1000));
+  await page.click('button:has-text("Keluar Aplikasi")', { force: true });
+  await page.waitForURL(/.*\/login/);
+
+  // 3. Pimpinan tolak
+  await loginUser(page, PIMPINAN_EMAIL, PIMPINAN_PASS, 'Pimpinan');
+  await page.click('text=Daftar Laporan', { force: true });
+  await page.locator('tr').filter({ hasText: uniqueTitle }).locator('text=Detail & Review').click();
+  await page.click('text=Tolak / Minta Revisi');
+  await page.fill('textarea[name="catatan_revisi"]', 'Perbaiki.');
+  await page.click('button:has-text("Kirim Penolakan")');
+  await expect(page.locator('text=Ditolak').first()).toBeVisible();
+  await page.click('button:has-text("Keluar Aplikasi")', { force: true });
+  await page.waitForURL(/.*\/login/);
+
+  // 4. Pegawai revisi
+  await loginUser(page, PEGAWAI_EMAIL, PEGAWAI_PASS, 'Pegawai');
+  await page.click('text=Daftar Tugas Aktif', { force: true });
+  await page.locator('tr').filter({ hasText: uniqueTitle }).getByRole('link', { name: 'Detail', exact: true }).click();
+  await expect(page.locator('text=Laporan Anda ditolak / diminta revisi oleh pimpinan')).toBeVisible();
+  await page.click('text=Revisi & Kirim Ulang');
+  await page.fill('textarea[name="notes"]', 'Notes revisi E2E.');
+  await page.click('button:has-text("Submit & Kirim ke Pimpinan")');
+  await page.waitForURL(/.*\/pegawai\/riwayat/);
+});

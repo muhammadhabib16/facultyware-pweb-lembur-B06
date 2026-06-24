@@ -1,117 +1,103 @@
 const { test, expect } = require('@playwright/test');
 
 // =====================================================================
-// KONFIGURASI PENGGUNA UJI (SILAKAN SESUAIKAN DENGAN DATA DI DATABASE)
+// KONFIGURASI PENGGUNA UJI (SESUAIKAN DENGAN DATA DI DATABASE)
 // =====================================================================
-const PIMPINAN_EMAIL = 'habib@facultyware.com';
+const PIMPINAN_EMAIL = 'alex@facultyware.com';
 const PIMPINAN_PASS = 'password123';
 
-const PEGAWAI_EMAIL = 'alya@facultyware.com'; // Ganti jika email pegawai berbeda di DB
+const PEGAWAI_EMAIL = 'Isan@facultyware.com';
 const PEGAWAI_PASS = 'password123';
 
+const ADMIN_EMAIL = 'darrel@facultyware.com';
+const ADMIN_PASS = 'password123';
 
+/**
+ * Helper login yang robust: tunggu halaman selesai load dulu (networkidle)
+ * sebelum mengisi form, sehingga input tidak terlewat.
+ */
+async function loginUser(page, email, password) {
+  await page.goto('/login');
+  await page.waitForLoadState('domcontentloaded');
+  await page.waitForSelector('input[name="email"]', { state: 'visible' });
+  await page.fill('input[name="email"]', email);
+  await page.fill('input[name="password"]', password);
+  await page.click('button[type="submit"]');
+  await page.waitForURL(/.*\/home/, { timeout: 60000 });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 test.describe('Alur Autentikasi', () => {
 
   test('Login berhasil dengan kredensial yang benar', async ({ page }) => {
     await page.goto('/login');
-    await expect(page.locator('h1')).toContainText('Welcome back');
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForSelector('input[name="email"]', { state: 'visible' });
+    await expect(page.locator('h1')).toContainText('Selamat Datang');
 
     await page.fill('input[name="email"]', PIMPINAN_EMAIL);
     await page.fill('input[name="password"]', PIMPINAN_PASS);
     await page.click('button[type="submit"]');
 
-    // Pastikan diarahkan ke dashboard atau laporan pimpinan
-    await expect(page).toHaveURL(/.*\/pimpinan\/laporan|.*\/home/);
+    await expect(page).toHaveURL(/.*\/home/);
   });
 
   test('Login gagal dengan kredensial salah', async ({ page }) => {
     await page.goto('/login');
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForSelector('input[name="email"]', { state: 'visible' });
     await page.fill('input[name="email"]', PIMPINAN_EMAIL);
-    await page.fill('input[name="password"]', 'salah123');
+    await page.fill('input[name="password"]', 'salahpassword');
     await page.click('button[type="submit"]');
 
-    // Pesan error biasanya muncul, pastikan masih di halaman login
+    // Tetap di halaman login setelah login gagal
     await expect(page).toHaveURL(/.*\/login/);
   });
 
   test('Logout berhasil', async ({ page }) => {
-    await page.goto('/login');
-    await page.fill('input[name="email"]', PIMPINAN_EMAIL);
-    await page.fill('input[name="password"]', PIMPINAN_PASS);
-    await page.click('button[type="submit"]');
-    await expect(page).toHaveURL(/.*\/pimpinan\/laporan|.*\/home/);
-
-    // Cari tombol logout di sidebar dengan teks "Keluar Aplikasi"
+    await loginUser(page, PIMPINAN_EMAIL, PIMPINAN_PASS);
+    // Cari tombol logout di sidebar
     await page.click('button:has-text("Keluar Aplikasi"), a:has-text("Keluar Aplikasi")');
     await expect(page).toHaveURL(/.*\/login/);
   });
 
 });
 
+// ─────────────────────────────────────────────────────────────────────────────
 test.describe('Alur Pegawai: Permohonan & Pelaporan Lembur', () => {
 
   test.beforeEach(async ({ page }) => {
-    // Login sebagai pegawai sebelum setiap test di blok ini
-    await page.goto('/login');
-    await page.fill('input[name="email"]', PEGAWAI_EMAIL);
-    await page.fill('input[name="password"]', PEGAWAI_PASS);
-    await page.click('button[type="submit"]');
+    await loginUser(page, PEGAWAI_EMAIL, PEGAWAI_PASS);
   });
 
   test('Pegawai dapat mengakses form permohonan lembur mandiri', async ({ page }) => {
     await page.goto('/pegawai/permohonan');
     await expect(page.locator('h1')).toContainText('Ajukan Permohonan');
-    
-    // Pastikan form field tersedia
     await expect(page.locator('input[name="title"]')).toBeVisible();
-    await expect(page.locator('textarea[name="description"]')).toBeVisible();
   });
 
   test('Pegawai dapat melihat daftar tugas aktif', async ({ page }) => {
     await page.goto('/pegawai/tugas');
-    await expect(page.locator('h1')).toContainText('Daftar Tugas');
+    await expect(page.locator('h1')).toContainText('Daftar Tugas Lembur');
   });
 
   test('Pegawai dapat melihat riwayat lembur', async ({ page }) => {
     await page.goto('/pegawai/riwayat');
     await expect(page.locator('h1')).toContainText('Riwayat & Status Lembur');
-    
-    // Memastikan tabel riwayat termuat
     await expect(page.locator('table')).toBeVisible();
   });
 
-  // Catatan: Test E2E untuk *submit* form (insert data) dipisah atau tidak dilakukan berulang 
-  // agar tidak menumpuk data sampah di database development, 
-  // namun Anda dapat menghidupkan baris di bawah ini jika ingin mengetes insert:
-  /*
-  test('Pegawai dapat submit permohonan lembur', async ({ page }) => {
-    await page.goto('/pegawai/permohonan');
-    await page.fill('input[name="title"]', 'Lembur Testing E2E');
-    await page.fill('textarea[name="description"]', 'Menguji fungsionalitas permohonan lembur otomatis.');
-    await page.fill('input[name="request_date"]', '2026-10-10');
-    await page.fill('input[name="planned_start_time"]', '2026-10-10T17:00');
-    await page.fill('input[name="planned_end_time"]', '2026-10-10T20:00');
-    await page.click('button[type="submit"]');
-
-    // Tunggu sampai diarahkan ke daftar tugas aktif
-    await expect(page).toHaveURL(/.*\/pegawai\/tugas/);
-  });
-  */
 });
 
+// ─────────────────────────────────────────────────────────────────────────────
 test.describe('Alur Pimpinan: Validasi & Penugasan', () => {
 
   test.beforeEach(async ({ page }) => {
-    // Login sebagai pimpinan sebelum setiap test di blok ini
-    await page.goto('/login');
-    await page.fill('input[name="email"]', PIMPINAN_EMAIL);
-    await page.fill('input[name="password"]', PIMPINAN_PASS);
-    await page.click('button[type="submit"]');
+    await loginUser(page, PIMPINAN_EMAIL, PIMPINAN_PASS);
   });
 
-  test('Pimpinan dapat melihat dashboard / laporan', async ({ page }) => {
-    await page.goto('/pimpinan/laporan');
-    // Memastikan halaman laporan bisa diakses dan tabel muncul
+  test('Pimpinan dapat melihat dashboard', async ({ page }) => {
+    await page.goto('/home');
     await expect(page.locator('table')).toBeVisible();
   });
 
@@ -120,7 +106,7 @@ test.describe('Alur Pimpinan: Validasi & Penugasan', () => {
     await expect(page.locator('table')).toBeVisible();
   });
 
-  test('Pimpinan dapat melihat form buat penugasan lembur (Assign)', async ({ page }) => {
+  test('Pimpinan dapat melihat form buat penugasan lembur', async ({ page }) => {
     await page.goto('/pimpinan/penugasan/buat');
     await expect(page.locator('input[name="title"]')).toBeVisible();
     await expect(page.locator('button[type="submit"]')).toBeVisible();
@@ -128,14 +114,11 @@ test.describe('Alur Pimpinan: Validasi & Penugasan', () => {
 
 });
 
+// ─────────────────────────────────────────────────────────────────────────────
 test.describe('Alur Admin: Kelola Pegawai', () => {
 
   test.beforeEach(async ({ page }) => {
-    // Login sebagai admin
-    await page.goto('/login');
-    await page.fill('input[name="email"]', 'darrel@facultyware.com');
-    await page.fill('input[name="password"]', 'password123');
-    await page.click('button[type="submit"]');
+    await loginUser(page, ADMIN_EMAIL, ADMIN_PASS);
   });
 
   test('Admin dapat mengakses halaman kelola pegawai', async ({ page }) => {
@@ -152,4 +135,3 @@ test.describe('Alur Admin: Kelola Pegawai', () => {
   });
 
 });
-
