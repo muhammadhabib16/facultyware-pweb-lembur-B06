@@ -68,5 +68,5 @@ test('Pimpinan Fitur 21 & 24: Menyetujui Laporan Lembur Pegawai', async ({ page 
     await dialog.accept();
   });
   await page.click('text=Konfirmasi Setuju');
-  await expect(page.locator('text=Disetujui')).toBeVisible();
+  await expect(page.locator('text=Disetujui').first()).toBeVisible();
 });

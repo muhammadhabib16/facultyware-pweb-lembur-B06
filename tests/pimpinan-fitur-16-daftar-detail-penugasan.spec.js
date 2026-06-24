@@ -50,7 +50,7 @@ test('Pimpinan Fitur 16: Melihat Daftar & Detail Penugasan Lembur Pegawai', asyn
   const taskRow = page.locator('tr').filter({ hasText: uniqueTitle });
   await expect(taskRow).toBeVisible();
   
-  // Detail
   await taskRow.getByRole('link', { name: 'Lihat Detail', exact: true }).click();
+  await page.waitForURL(/.*\/pimpinan\/penugasan\/\d+/);
   await expect(page.locator('h1')).toContainText('REQ-ASSIGN-');
 });

@@ -932,9 +932,9 @@ exports.submitLaporan = async (req, res, next) => {
       [actual_start_time, actual_end_time, actualHours, notes, id, employeeId],
     );
 
-    // 2. Update status overtime_request ke waiting_approval
+    // 2. Update status overtime_request ke waiting_approval dan simpan waktu kirim (submitted_at)
     await connection.query(
-      `UPDATE overtime_requests SET status = 'waiting_approval', updated_at = NOW() WHERE id = ? `,
+      `UPDATE overtime_requests SET status = 'waiting_approval', submitted_at = NOW(), updated_at = NOW() WHERE id = ? `,
       [id],
     );
 

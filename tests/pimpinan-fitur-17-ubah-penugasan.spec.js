@@ -48,6 +48,7 @@ test('Pimpinan Fitur 17: Mengubah Data Penugasan Lembur Pegawai', async ({ page 
   await page.click('text=Daftar Tugas Anda', { force: true });
   const taskRow = page.locator('tr').filter({ hasText: uniqueTitle });
   await taskRow.getByRole('link', { name: 'Lihat Detail', exact: true }).click();
+  await page.waitForURL(/.*\/pimpinan\/penugasan\/\d+/);
   await page.click('text=Ubah Penugasan');
   await expect(page).toHaveURL(/.*\/edit/);
   await page.fill('input[name="title"]', `${uniqueTitle} - Edited`);

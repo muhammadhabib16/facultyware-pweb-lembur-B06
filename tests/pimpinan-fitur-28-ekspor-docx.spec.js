@@ -64,6 +64,13 @@ test('Pimpinan Fitur 28: Mengekspor Detail Laporan Kerja ke Microsoft Word (DOCX
   await loginUser(page, PIMPINAN_EMAIL, PIMPINAN_PASS, 'Pimpinan');
   await page.click('text=Daftar Laporan', { force: true });
   await page.locator('tr').filter({ hasText: uniqueTitle }).locator('text=Detail & Review').click();
+  // Pimpinan approve first so DOCX download button becomes visible
+  page.once('dialog', async dialog => {
+    await dialog.accept();
+  });
+  await page.click('text=Konfirmasi Setuju');
+  await expect(page.locator('text=Disetujui').first()).toBeVisible();
+
   const [downloadDocx] = await Promise.all([
     page.waitForEvent('download'),
     page.click('text=Unduh DOCX')

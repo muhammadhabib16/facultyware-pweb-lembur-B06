@@ -67,5 +67,5 @@ test('Pimpinan Fitur 21 & 25: Menolak Laporan Lembur Pegawai dengan Catatan Revi
   await page.click('text=Tolak / Minta Revisi');
   await page.fill('textarea[name="catatan_revisi"]', 'Tolong direvisi bagian deskripsi.');
   await page.click('button:has-text("Kirim Penolakan")');
-  await expect(page.locator('text=Ditolak')).toBeVisible();
+  await expect(page.locator('text=Ditolak').first()).toBeVisible();
 });

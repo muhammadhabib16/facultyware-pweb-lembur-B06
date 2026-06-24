@@ -48,11 +48,12 @@ test('Pimpinan Fitur 19: Menghapus / Membatalkan Penugasan Lembur Pegawai', asyn
   await page.click('text=Daftar Tugas Anda', { force: true });
   const taskRow = page.locator('tr').filter({ hasText: uniqueTitle });
   await taskRow.getByRole('link', { name: 'Lihat Detail', exact: true }).click();
+  await page.waitForURL(/.*\/pimpinan\/penugasan\/\d+/);
   page.once('dialog', async dialog => {
     await dialog.accept();
   });
-  await page.click('text=Hapus');
-  await expect(page.locator('text=Hapus')).not.toBeVisible();
+  await page.getByRole('button', { name: 'Hapus', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Hapus', exact: true })).not.toBeVisible();
   await page.goto('/pimpinan/penugasan');
   await expect(page.locator(`text=${uniqueTitle}`)).not.toBeVisible();
 });

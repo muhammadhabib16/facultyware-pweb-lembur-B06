@@ -42,12 +42,13 @@ test('Pimpinan Fitur 18: Mengekspor Penugasan Lembur ke PDF', async ({ page }, t
   await page.fill('input[name="planned_start_time"]', `${formattedDate}T17:00`);
   await page.fill('input[name="planned_end_time"]', `${formattedDate}T20:00`);
   await page.click('button[type="submit"]');
-  await expect(page.locator('text=berhasilditerbitkan|berhasil diterbitkan')).toBeVisible();
+  await expect(page.locator('text=berhasil diterbitkan')).toBeVisible();
 
   // Buka detail & Ekspor PDF
   await page.click('text=Daftar Tugas Anda', { force: true });
   const taskRow = page.locator('tr').filter({ hasText: uniqueTitle });
   await taskRow.getByRole('link', { name: 'Lihat Detail', exact: true }).click();
+  await page.waitForURL(/.*\/pimpinan\/penugasan\/\d+/);
   const [downloadPdf] = await Promise.all([
     page.waitForEvent('download'),
     page.click('text=Ekspor ke PDF')
